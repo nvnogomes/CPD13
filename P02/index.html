@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Aula Prática 2</title>
+  </head>
+
+  <body>
+    <h1>Aula Prática 2</h1>
+
+O objectivo deste trabalho é a familiarização com uma APIs
+(Application Programming Interface) que permitem programar aplicações
+com múltiplos processos e que assumem um espaço de endereçamento
+partilhado entre os vários processos: OpenMP (Open Multi-Processing)
+
+Na aula prática será feita uma breve apresentação da norma openMP e
+das principais funções. Para outras referências consulte os slides
+da aula prática.
+<p>
+Não esquecer que para usar a API OpenMP
+é necessário incluir o ficheiro <em>omp.h </em>  
+e para compilar é preciso fazer: <p>
+
+<pre>
+gcc -fopenmp  ...  
+</pre>
+
+
+<h4>Cálculo do valor de PI</h4>
+
+Pretende-se determinar o valor de  PI calculando o valor aproximado do
+integral entre 0 e 1 da função f(x) = 4 / (1 + x*x).
+<p>
+O valor do integral pode ser aproximado dividindo o intervalo entre 0 e 1
+em N rectângulos e aproximando o integral pela soma das áreas dos i rectângulos
+com i a variar de  0 a N-1 em que a área do rectângulo i é dada por
+f(i/N) * 1/N.
+<p>
+Uma estratégia para tirar partido de K processadores disponíveis é colocar cada
+um deles a calcular N/K áreas e somar os resultados conseguidos por todos
+eles.
+<p>
+Usando o OpenMP  escreva um programa que permite especificar
+o número de intervalos a usar e o número de processos leves a usar:
+<pre>
+./pi1 n_intervalos n_threads
+</pre>
+
+
+Sugere-se que para cada uma das abordagens comece por determinar o
+número NN de intervalos necessários para ter, pelo menos, 6 casas
+decimais correctas para pi. <p>
+Nota: o valor de pi é 3.141592653589973238... 
+<p>
+Usando o nº NN obtenha tempos de execução para um diferente nº de
+processos leves quer para a solução Pthreads quer para a openMP.
+
+Para obter tempos pode usar o comando "builtin" do shell <em>time</em>
+<pre>
+time ./pi1 1000000 4
+</pre>
+<p>
+<h3> Outro exemplo do uso do OpenMP </h3>
+<p>
+Considere o programa <em>taylor.c</em> disponível em
+<em>Documentação de Apoio->Problemas</em> que calcula sucessivamente:
+<ul>
+<li> o valor de e (logaritmo natural) usando e = 1+(1/1!)+(1/2!)+(1/3!)+...
+<li> o valor de pi usando pi/4 = 1-1/3+1/5-1/7+1/9...
+<li> o produto dos dois
+</ul>
+Compile e teste o programa. Anote o tempo de execução. 
+<p>
+O programa <em>taylor_mp.c</em> também disponível no CLIP é uma modificação 
+do programa anterior usando as funções da biblioteca OpeMP. Este programa
+coloca um CPU a calcular o valor de <em>e</em> e outro o valor de <em>pi</em>.
+<p>
+Compile e teste o programa. Anote o tempo de execução.
+<p>
+Observe que há de facto dois processos leves a executar o programa. Para
+isso pode usar o comando
+<pre>
+top -H
+</pre>
+ou a aplicação gráfica  <em>System Monitor</em>
+<p>
+<ul>
+<li> Explique os resultados (ou seja os tempos de execução) obtidos nas duas versões.
+<li> 
+Por omissão as
+variáveis são partilhadas por todos os threads. 
+Observe a especificação das variáveis que são partilhadas e das
+que são privativas de cada thread. O que aconteceria se a 
+especificação de que <em>i</em> é privativo não aparecesse? 
+</ul>
+<p>
+<h3> Cálculo de uma figura de Mandelbrot </h3>
+<p>
+Pretende-se calcular um conjunto de Mandelbrot. 
+Ver nos slides das aulas práticas uma explicação
+sobre a forma de geração desta figura
+O ficheiro 
+<em>mandel.c</em> disponível em 
+<em>Documentação de Apoio->Problemas</em> inclui:
+<ul>
+<li> As rotinas <em>compute</em> e <em>compute_point</em>
+que produzem uma matriz de pontos correspondendo a uma
+figura de Mandelbrot. Estas rotinas usam a fórmula de recorrência
+acima referida e retornam um valor entre 1 e 255 que corresponde ao nível
+de cinzento do pixel. 
+<li> O procedimento <em>output_pgm</em> que a partir da matriz produzida
+gera uma imagem em tons de cinzento no formato PGM. Os ficheiros neste
+formato têm um cabeçalho em ASCII e depois aparecem inteiros correspondente
+ao nível de cinzento de cada pixel. Para detalhes veja o código da
+função, consulte a Wikipedia ou a seguinte 
+<a href="http://www.fileformat.info/format/pbm/egff.htm">referência</a>. 
+Os ficheiros PPM podem ser visualizados com o programa xview ou display 
+do pacote ImageMagick. 
+</ul>
+<p>
+Pretende-se paralelizar  
+o cálculo da imagem de Mandelbrot.Uma aproximação possível para a 
+é dividir o rectângulo em várias faixas e tornar cada faixa uma unidade de
+trabalho.
+Cada processo leve recebe uma faixa definida pela sua largura,
+altura e coordenadas dos vértices inferior esquerdo e superior
+direito.
+<P>
+Cada processo calcula o ``bitmap'' correspondente à sua faixa de acordo
+com a fórmula de recorrência indicada acima. Este bitmap é o resultado
+do trabalho desse processo.
+ 
+
+<h4>Estratégias de paralelização  </h4>
+<ul>
+<li><em>Estratégia 1- distribuição estática de trabalho:</em>
+A superfície a calcular é subdividida num
+número fixo de rectângulos, sendo cada um deles atribuído a um processo.
+O trabalho associado a cada ponto é variável (é tanto maior
+quanto o nº de iterações necessário para divergir) pelo que
+esta estratégia pode atribuir cargas de trabalho diferentes
+a cada processo leve.
+
+<li><em>Estratégia 2- distribuição dinâmica de trabalho:</em>
+Com uma distribuição de trabalho <em> dinâmica</em>, a superfície é
+dividida em 
+pequenas parcelas. Cada processador pede uma nova parcela
+de trabalho após completar a sua tarefa. Esta aproximação tem a
+vantagem de permitir que processos leves que adquiram
+porções de trabalho mais pequenas, podem calcular mais do que uma
+parcela.
+</ul>
+
+Pretende-se que programe as duas estratégias acima indicadas
+usando as primitivas do OpenMP.
+Pretende-se avaliar  o tempo gasto, quando se varia o número de
+processos usados. 
+Isto deve ser feito para as duas estratégias de distribuição de
+trabalho mencionadas anteriormente.
+<p>
+
+</body>
+</html>
+

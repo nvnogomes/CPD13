@@ -1,5 +1,7 @@
 #include <mpi.h>
 
+#include "mandel.c"
+
 #define WORKTAG 1
 #define DIETAG 2
 
@@ -31,8 +33,8 @@ main(int argc, char **argv)
     slave();
   }
 
-  /* Shut down MPI */
 
+  /* Shut down MPI */
   MPI_Finalize();
   return 0;
 }
@@ -113,6 +115,8 @@ master(void)
   for (rank = 1; rank < ntasks; ++rank) {
     MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
   }
+
+  process_results();
 }
 
 

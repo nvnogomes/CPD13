@@ -78,7 +78,6 @@ master(void)
   while (work != NULL) {
 
     /* Receive results from a slave */
-
     MPI_Recv(&result,           /* message buffer */
              1,                 /* one data item */
              MPI_DOUBLE,        /* of type double real */
@@ -88,7 +87,6 @@ master(void)
              &status);          /* info about the received message */
 
     /* Send the slave a new work unit */
-
     MPI_Send(&work,             /* message buffer */
              1,                 /* one data item */
              MPI_INT,           /* data item is an integer */
@@ -97,7 +95,6 @@ master(void)
              MPI_COMM_WORLD);   /* default communicator */
 
     /* Get the next unit of work to be done */
-
     work = get_next_work_item();
   }
 

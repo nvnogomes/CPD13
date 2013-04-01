@@ -14,7 +14,8 @@ static int max_iterations = 255;
  * @param cr : y value
  * @return color of the given point
  */
-int compute_point(double ci, double cr)
+int
+compute_point(double ci, double cr)
 {
     int iterations = 0;
     double zi = 0;
@@ -52,7 +53,8 @@ int compute_point(double ci, double cr)
  * @param xmax : right top x coord
  * @param ymax : right top y coord
  */
-void compute(int *buffer, int nx, int ny, double xmin, double xmax, 
+void
+compute(int *buffer, int nx, int ny, double xmin, double xmax,
              double ymin, double ymax)
 {
     double delta_x, delta_y;

@@ -1,27 +1,19 @@
 #include <mpi.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 
-#include "../lib/mandel.c"
+#include "../lib/mandel.h"
+#include "../lib/definitions.h"
+
+
 
 /**
  * Tags to communicate
  * with the workers */
 #define WORKTAG 1
 #define DIETAG 2
-
-/**
- * Image size and location */
-#define WIDTH 200 //2048
-#define HEIGHT 200 //2048
-#define X_MIN -1
-#define Y_MIN -1
-#define X_MAX 1
-#define Y_MAX 1
-
-/* debug info */
-#define DEBUG true
 
 
 /**
@@ -72,30 +64,6 @@ double delta_x, delta_y;
 MPI_Datatype mpi_result_type, mpi_pointdata_type;
 
 
-
-/**
- * @brief debug_info
- * Prints debug messages when the
- * debug flag is true.
- *
- * @param format string to print
- * @return exit_code
- */
-int
-debug_info(const char *format, ...)
-{
-    int done = 0;
-
-    if( DEBUG )
-    {
-        va_list arg;
-        va_start (arg, format);
-        done = vfprintf (stdout, format, arg);
-        va_end (arg);
-    }
-
-    return done;
-}
 
 
 /**
@@ -187,7 +155,12 @@ main(int argc, char **argv)
     if (myrank == 0)
     {
         debug_info("Master initiating...\n");
+        double start, finish;
+
+        start = MPI_Wtime();
         master();
+        finish = MPI_Wtime();
+        printf("\n\n Time elapsed: %e seconds", finish-start);
     }
     else {
         debug_info( "Slave %i initiating...\n", myrank );
@@ -252,11 +225,12 @@ master(void)
         /* Get the next unit of work to be done */
         work = get_next_work_item();
         if( work.end ) {
-            debug_info("BREAK");
+            debug_info("NO NEXT WORK ITEM");
             break;
         }
 
-        debug_info( "Work to deliver (%i,%i)\n", work.x, work.y );
+        if( work.x % 100 == 0 && work.y % 100 == 0)
+            debug_info( "Work to deliver (%i,%i)\n", work.x, work.y );
 
 
         /* Receive results from a slave */

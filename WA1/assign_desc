@@ -17,14 +17,14 @@ Pretende-se que programe as duas estratégias acima indicadas usando as primitiv
 
 
 
-+----------------- x1,y1
++----------------- x2,y2
 |                    |
 |        L x H       |
 |                    |	
-x2,y2----------------+
+x1,y1----------------+
 
-xi = x2 + (x1-x2/L)*i
-yi = y2 + (y1-y2/H)*i
+xi = x1 + (x2-x1/L)*i
+yi = y1 + (y2-y1/H)*i
 
 
 xi,p+1 = xip^2 + yip^2

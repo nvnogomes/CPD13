@@ -2,7 +2,7 @@
 CC = gcc
 
 # mpi compiler wrap
-MPICC = mpic++
+MPICC = mpicc
 
 # flags for showing warnings and be utf8 aware
 CFLAGS  = -g -Wall
@@ -19,32 +19,40 @@ LIBS = -lgomp
 .SILENT:	# don't echo commands executed
 
 
-PROGRAMS = mp mpi mp2i cl
-LIBS = mandel walltime
+PROGRAMS = seq mp mpi mp2i cl
+CLIBS = mandel walltime defs
 
 
-all: $(LIBS) $(PROGRAMS)
-lib: $(LIBS)
+all: $(CLIBS) seq mpi
+library: $(CLIBS)
 
 
-mandel:
-	$(CC) $(CFLAGS) -c lib/mandel.c -o lib/mandel.o
-walltime:
-	$(CC) $(CFLAGS) -c lib/walltime.c -o lib/walltime.o
+# CLIBS
+mandel: lib/mandel.c lib/mandel.h
+	$(CC) $(CFLAGS) -c lib/mandel.c -o bin/mandel.o
+
+walltime: lib/walltime.c lib/walltime.h
+	$(CC) $(CFLAGS) -c lib/walltime.c -o bin/walltime.o
+
+defs: lib/definitions.c lib/definitions.h
+	$(CC) $(CFLAGS) -c lib/definitions.c -o bin/definitions.o
 
 
+# PROGRAMS
+seq: mandel defs
+	$(CC) $(CFLAGS) -o bin/mandelbrot_seq seq/mandelbrot_seq.c bin/mandel.o bin/definitions.o
 
-mp: lib/walltime.o lib/mandel.o
-	$(CC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_omp openMP/mandelbrot_omp.c
+mp: walltime mandel defs
+	$(CC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_omp openMP/mandelbrot_omp.c bin/definitions.o bin/mandel.o bin/walltime.o
 
-mpi: lib/walltime.o lib/mandel.o
-	$(MPICC) $(CFLAGS) -o bin/mandelbrot_mpi openMPI/mandelbrot_mpi.c
+mpi: mandel defs
+	$(MPICC) $(CFLAGS) -o bin/mandelbrot_mpi openMPI/mandelbrot_mpi.c bin/mandel.o bin/definitions.o
 
-mp2i:
-	$(MPICC) $(CFLAGS) $(LIBS) bin/mandelbrot_mp2i openMPI_MP/mandelbrot_mp2.c
+mp2i: mandel defs
+	$(MPICC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_mp2i openMPI_MP/mandelbrot_mp2i.c bin/mandel.o bin/walltime.o bin/definitions.o
 
 cl:
 	$(CC) $(CFLAGS)
 
 clean:
-	rm -f bin/* lib/*.o
+	rm -f bin/*

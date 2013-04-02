@@ -39,8 +39,8 @@ defs: lib/definitions.c lib/definitions.h
 
 
 # PROGRAMS
-seq: mandel defs
-	$(CC) $(CFLAGS) -o bin/mandelbrot_seq seq/mandelbrot_seq.c bin/mandel.o bin/definitions.o
+seq: mandel defs walltime
+	$(CC) $(CFLAGS) -o bin/mandelbrot_seq seq/mandelbrot_seq.c bin/mandel.o bin/definitions.o bin/walltime.o
 
 mp: walltime mandel defs
 	$(CC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_omp openMP/mandelbrot_omp.c bin/definitions.o bin/mandel.o bin/walltime.o

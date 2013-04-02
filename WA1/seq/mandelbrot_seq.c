@@ -5,17 +5,27 @@
 
 #include "../lib/mandel.h"
 #include "../lib/definitions.h"
-
+#include "../lib/walltime.h"
 
 
 int
 main(int argc, char **argv)
 {
+    debug_info("Starting Mandelbrot sequential...\n");
+
+    /* for timing */
+    double startTime, elapsedTime;
+    double clockZero = 0.0;
+
     int *buffer = malloc(WIDTH*HEIGHT*sizeof(int));
 
-    debug_info("Starting Mandelbrot sequential...\n");
-    compute(buffer,WIDTH,HEIGHT,X_MIN,X_MAX,Y_MIN,Y_MAX);
 
+    debug_info("Computing image...\n");
+    startTime = walltime( &clockZero );
+    compute(buffer,WIDTH,HEIGHT,X_MIN,X_MAX,Y_MIN,Y_MAX);
+    elapsedTime = walltime( &startTime );
+
+    debug_info("WallTime: %.2fs\n", elapsedTime);
     debug_info("Building image...\n");
     output_pgm("mandel_seq",buffer,WIDTH,HEIGHT,255);
 

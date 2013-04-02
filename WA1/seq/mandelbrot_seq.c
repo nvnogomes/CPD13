@@ -14,10 +14,11 @@ main(int argc, char **argv)
     int *buffer = malloc(WIDTH*HEIGHT*sizeof(int));
 
     debug_info("Starting Mandelbrot sequential...\n");
-    compute(buffer,WIDTH,HEIGHT,X_MIN,X_MIN,Y_MIN,Y_MAX);
+    compute(buffer,WIDTH,HEIGHT,X_MIN,X_MAX,Y_MIN,Y_MAX);
 
-    debug_info("Mandelbrot Ended\n");
+    debug_info("Building image...\n");
+    output_pgm("mandel_seq",buffer,WIDTH,HEIGHT,255);
 
-    output_pgm("mandel",buffer,WIDTH,HEIGHT,255);
+    debug_info("Finished!\n");
     return 0;
 }

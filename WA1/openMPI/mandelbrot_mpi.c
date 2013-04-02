@@ -46,13 +46,12 @@ static void define_mpi_structs(void);
 static void master(void);
 static void worker(void);
 static point_data get_next_work_item(void);
-static void process_results(void);
+static void process_results();
 static point_color do_work(point_data);
 
-
-
-/* image color buffer */
+/* buffer */
 int *buffer;
+
 
 /* cycle values */
 int cycle_x, cycle_y;
@@ -139,21 +138,16 @@ main(int argc, char **argv)
         return 1;
     }
 
-    // initiate variables
-    cycle_x = -1; // variable is incremented to 0 in the function
-    cycle_y = 0;
-    buffer = (int*)malloc(WIDTH * HEIGHT);
-
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
 
     define_mpi_structs();
-    debug_info("Structures created\n");
 
     /* Find out my identity in the default communicator */
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0)
     {
+		debug_info("Starting Mandelbrot with openMPI...\n");
         debug_info("Master initiating...\n");
         double start, finish;
 
@@ -174,6 +168,8 @@ main(int argc, char **argv)
 
     /* Shut down MPI */
     MPI_Finalize();
+
+    debug_info("Finished!\n");
     return 0;
 }
 
@@ -199,16 +195,28 @@ master(void)
     /* Find out how many processes there are in the default communicator */
     MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
 
-
+    // initiate variables
     delta_x = (X_MAX - X_MIN) / WIDTH;
     delta_y = (Y_MAX - Y_MIN ) / HEIGHT;
 
+    cycle_x = 0;
+    cycle_y = 0;
+    int buffer_size = (int)WIDTH * HEIGHT;
+    buffer = (int*)malloc(buffer_size*sizeof(int));
+
+
+    debug_info("Distributing work... (%i)\n", buffer_size);
     /* Seed the slaves; send one unit of work to each slave. */
     for (rank = 1; rank < ntasks; ++rank)
     {
 
         /* Find the next item of work to do */
         work = get_next_work_item();
+
+        //debug_info("NW (%f,%f) %i\n", work.x_value, work.y_value, work.end);
+        if( work.end == 1 ){
+            break;
+        }
 
         /* Send it to each rank */
         MPI_Send(&work,             /* message buffer */
@@ -218,20 +226,18 @@ master(void)
                  WORKTAG,           /* user chosen message tag */
                  MPI_COMM_WORLD);   /* default communicator */
     }
+	debug_info("Refeeding...\n");
 
     /* Loop over until there is no more work to be done */
     for(;;)
     {
         /* Get the next unit of work to be done */
         work = get_next_work_item();
-        if( work.end ) {
-            debug_info("NO NEXT WORK ITEM");
+        if( work.end == 1 ){
             break;
         }
 
-        if( work.x % 100 == 0 && work.y % 100 == 0)
-            debug_info( "Work to deliver (%i,%i)\n", work.x, work.y );
-
+        //debug_info("NW (%f,%f) %i\n", work.x_value, work.y_value, work.end);
 
         /* Receive results from a slave */
         MPI_Recv(&result,           /* message buffer */
@@ -242,11 +248,8 @@ master(void)
                  MPI_COMM_WORLD,    /* default communicator */
                  &status);          /* info about the received message */
 
-        if( result.color != 3 )
-            debug_info( "Received result from worker %i (%i:%i)\n",
-                        status.MPI_SOURCE, result.index, result.color );
-
-        buffer[result.index] = result.color;
+        //debug_info("Result i%i c%i\n", result.index, result.color);
+        buffer[(int)result.index] = result.color;
 
         /* Send the slave a new work unit */
         MPI_Send(&work,             /* message buffer */
@@ -258,11 +261,10 @@ master(void)
 
     }
 
-    debug_info("All work delivered... Waiting results\n");
+    debug_info("Waiting results... \n");
     /* Receive all the results from the workers. */
     for (rank = 1; rank < ntasks; ++rank)
     {
-        printf("%i\n", rank);
         MPI_Recv(&result,
                  1,
                  mpi_result_type,
@@ -274,15 +276,17 @@ master(void)
         buffer[result.index] = result.color;
     }
 
-    debug_info("Laying off all the workers");
+    debug_info("Laying off all the workers...\n");
     /* Tell all the workers to exit by sending an DIETAG. */
     for (rank = 1; rank < ntasks; ++rank)
     {
         MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
     }
 
+	debug_info("Building image file...\n");
     /* build mandelbrot image */
     process_results();
+    debug_info("Image built!\n");
 }
 
 
@@ -334,7 +338,7 @@ get_next_work_item(void)
 {
     point_data next_work_unit;
 
-    cycle_x++;
+
     if( cycle_x >= WIDTH )
     {
         cycle_x = 0;
@@ -356,7 +360,7 @@ get_next_work_item(void)
     next_work_unit.y = cycle_y;
     next_work_unit.x_value = x_value;
     next_work_unit.y_value = y_value;
-
+    cycle_x++;
 
     return next_work_unit;
 }
@@ -370,10 +374,9 @@ get_next_work_item(void)
  * the actual implementation.
  */
 static void
-process_results(void)
+process_results()
 {
-    char filename[] = "figure";
-    output_pgm( filename,buffer, WIDTH, HEIGHT, 255);
+    output_pgm("mandel_mpi",buffer, WIDTH, HEIGHT, 255);
 }
 
 

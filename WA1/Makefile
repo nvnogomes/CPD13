@@ -8,7 +8,7 @@ MPICC = mpicc
 CFLAGS  = -g -Wall
 
 # OpenMP
-OMPFLAG = -fopenmp
+OMPFLAG = -fopenmp -lm
 
 # additional libraries
 LIBS = -lgomp 
@@ -23,7 +23,7 @@ PROGRAMS = seq mp mpi mp2i cl
 CLIBS = mandel walltime defs
 
 
-all: $(CLIBS) seq mpi
+all: $(CLIBS) seq mpi smp dmp
 library: $(CLIBS)
 
 
@@ -42,8 +42,13 @@ defs: lib/definitions.c lib/definitions.h
 seq: mandel defs walltime
 	$(CC) $(CFLAGS) -o bin/mandelbrot_seq seq/mandelbrot_seq.c bin/mandel.o bin/definitions.o bin/walltime.o
 
-mp: walltime mandel defs
-	$(CC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_omp openMP/mandelbrot_omp.c bin/definitions.o bin/mandel.o bin/walltime.o
+mp: dmp smp
+
+smp: walltime mandel defs
+	$(CC) $(CFLAGS) $(OMPFLAG) -o bin/mandelbrot_smp openMP/mandelbrot_smp.c bin/definitions.o bin/mandel.o bin/walltime.o
+
+dmp: walltime mandel defs
+	$(CC) $(CFLAGS) $(OMPFLAG) -o bin/mandelbrot_dmp openMP/mandelbrot_dmp.c bin/definitions.o bin/mandel.o bin/walltime.o
 
 mpi: mandel defs
 	$(MPICC) $(CFLAGS) -o bin/mandelbrot_mpi openMPI/mandelbrot_mpi.c bin/mandel.o bin/definitions.o

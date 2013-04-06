@@ -7,7 +7,6 @@
 #include "../lib/definitions.h"
 #include "../lib/walltime.h"
 
-
 int
 main(int argc, char **argv)
 {
@@ -25,7 +24,7 @@ main(int argc, char **argv)
     compute(buffer,WIDTH,HEIGHT,X_MIN,X_MAX,Y_MIN,Y_MAX);
     elapsedTime = walltime( &startTime );
 
-    debug_info("WallTime: %.2fs\n", elapsedTime);
+    printf("WallTime: %.2fs\n", elapsedTime);
     debug_info("Building image...\n");
     output_pgm("mandel_seq",buffer,WIDTH,HEIGHT,255);
 

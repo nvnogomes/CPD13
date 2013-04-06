@@ -1,30 +1,36 @@
 # GNU Compiler Compiler
 CC = gcc
 
-# mpi compiler wrap
-MPICC = mpicc
-
 # flags for showing warnings and be utf8 aware
 CFLAGS  = -g -Wall
 
-# OpenMP
-OMPFLAG = -fopenmp -lm
 
-# additional libraries
+# openMPI compiler wrap
+MPICC = mpicc
+
+
+# OpenMP flags
+OMPFLAG = -fopenmp -lm
 LIBS = -lgomp 
 
+
+# openCL flags and library
+CL_LIBRARY=-L /opt/AMDAPP/lib/x86_64
+CL_INCLUDE=-I /opt/AMDAPP/include
+CL_CFLAG=-lOpenCL
 
 
 .IGNORE:	# ignore problems (as far as possible)
 .SILENT:	# don't echo commands executed
 
 
-PROGRAMS = seq mp mpi mp2i cl
+PROGRAMS = seq mp mpi mp2i
 CLIBS = mandel walltime defs
 
 
-all: $(CLIBS) seq mpi smp dmp
+all: $(CLIBS) $(PROGRAMS)
 library: $(CLIBS)
+openCL: $(CLIBS) cl
 
 
 # CLIBS
@@ -53,11 +59,12 @@ dmp: walltime mandel defs
 mpi: mandel defs
 	$(MPICC) $(CFLAGS) -o bin/mandelbrot_mpi openMPI/mandelbrot_mpi.c bin/mandel.o bin/definitions.o
 
-mp2i: mandel defs
-	$(MPICC) $(CFLAGS) $(LIBS) -o bin/mandelbrot_mp2i openMPI_MP/mandelbrot_mp2i.c bin/mandel.o bin/walltime.o bin/definitions.o
+mp2i: mandel defs walltime
+	$(MPICC) $(CFLAGS) $(OMPFLAG) -o bin/mandelbrot_mp2i openMP2I/mandelbrot_mp2i.c bin/mandel.o bin/walltime.o bin/definitions.o
 
-cl:
-	$(CC) $(CFLAGS)
+cl: mandel defs walltime
+	$(CC) $(CL_INCLUDE) $(CL_LIBRARY) $(CL_FLAG) -o bin/mandelbrot_cl openCL/mandelbrot_cl.c bin/mandel.o bin/definitions.o bin/walltime.o
+
 
 clean:
 	rm -f bin/*

@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <omp.h>
+#include <math.h>
 
 #include "../lib/mandel.h"
 #include "../lib/definitions.h"
@@ -40,13 +42,14 @@ typedef struct {
 static void define_mpi_structs(void);
 static void master(void);
 static void worker(void);
-static point_data get_next_work_item(void);
 static void build_image();
-static point_color do_work(point_data);
+
 
 /* buffer */
 int *buffer;
 
+/* thread number */
+int numThreads;
 
 /* cycle values */
 int cycle_x, cycle_y;
@@ -125,11 +128,18 @@ main(int argc, char **argv)
 {
     int myrank;
 
-    if( argc != 1 )
-    {
-        printf("USAGE: mandelbrot_mpi\n");
-        return 1;
+    if( argc != 2 ) {
+      printf("USAGE: mandelbrot_mp2i <threads>");
+      exit(1);
     }
+
+    int numThreads = atoi(argv[1]);
+    if( numThreads == 0 )
+    {
+      printf("Mandelbrot_mp2i: Number of threads not accepted");
+      exit(1);
+    }
+
 
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
@@ -140,7 +150,7 @@ main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0)
     {
-		debug_info("Starting Mandelbrot with openMPI...\n");
+        debug_info("Starting Mandelbrot with openMPI...\n");
         debug_info("Master initiating...\n");
         double start, finish;
 
@@ -177,12 +187,28 @@ main(int argc, char **argv)
  * them. At the end, the result image
  * is constructed.
  */
+void
+aggregate_results(point_color *result)
+{
+    int i;
+    int split = WIDTH / 2;
+    omp_set_num_threads(numThreads);
+#pragma omp parallel shared(buffer, result, split) private(i)
+{
+#pragma omp for schedule(static, split)
+        for(i = 0; i < (int)WIDTH; i++)
+        {
+            point_color result_pair = result[i];
+            buffer[(int)result_pair.index] = result_pair.color;
+        }
+} // end pragma
+}
+
 static void
 master(void)
 {
     int ntasks, rank;
-    point_color result;
-    point_data work;
+    point_color *result;
     MPI_Status status;
 
 
@@ -198,57 +224,51 @@ master(void)
     int buffer_size = (int)WIDTH * HEIGHT;
     buffer = (int*)malloc(buffer_size*sizeof(int));
 
-
     debug_info("Distributing work... \n");
+    int stripe = 0;
+
     /* Seed the slaves; send one unit of work to each slave. */
-    for (rank = 1; rank < ntasks; ++rank)
+    for (; stripe < ntasks; stripe++)
     {
-
-        /* Find the next item of work to do */
-        work = get_next_work_item();
-
-        //debug_info("NW (%f,%f) %i\n", work.x_value, work.y_value, work.end);
-        if( work.end == 1 ){
+        // should not happen
+        if( stripe >= ntasks )
+        {
             break;
         }
 
+
+
         /* Send it to each rank */
-        MPI_Send(&work,             /* message buffer */
+        MPI_Send(&stripe,             /* message buffer */
                  1,                 /* one data item */
-                 mpi_pointdata_type,    /* data item is an integer */
-                 rank,              /* destination process rank */
+                 MPI_INT,    /* data item is an integer */
+                 stripe,              /* destination process rank */
                  WORKTAG,           /* user chosen message tag */
                  MPI_COMM_WORLD);   /* default communicator */
     }
-	debug_info("Refeeding...\n");
+    debug_info("Refeeding...\n");
+
 
     /* Loop over until there is no more work to be done */
-    for(;;)
+    for(; stripe < HEIGHT; stripe++)
     {
-        /* Get the next unit of work to be done */
-        work = get_next_work_item();
-        if( work.end == 1 ){
-            break;
-        }
-
-        //debug_info("NW (%f,%f) %i\n", work.x_value, work.y_value, work.end);
 
         /* Receive results from a slave */
         MPI_Recv(&result,           /* message buffer */
-                 1,                 /* one data item */
+                 WIDTH,                 /* one data item */
                  mpi_result_type,   /* of type double real */
                  MPI_ANY_SOURCE,    /* receive from any sender */
                  MPI_ANY_TAG,       /* any type of message */
                  MPI_COMM_WORLD,    /* default communicator */
                  &status);          /* info about the received message */
 
-        //debug_info("Result i%i c%i\n", result.index, result.color);
-        buffer[(int)result.index] = result.color;
+
+        aggregate_results(result);
 
         /* Send the slave a new work unit */
-        MPI_Send(&work,             /* message buffer */
+        MPI_Send(&stripe,             /* message buffer */
                  1,                 /* one data item */
-                 mpi_pointdata_type,           /* data item is an integer */
+                 MPI_INT,           /* data item is an integer */
                  status.MPI_SOURCE, /* to who we just received from */
                  WORKTAG,           /* user chosen message tag */
                  MPI_COMM_WORLD);   /* default communicator */
@@ -260,21 +280,21 @@ master(void)
     for (rank = 1; rank < ntasks; ++rank)
     {
         MPI_Recv(&result,
-                 1,
+                 WIDTH,
                  mpi_result_type,
                  MPI_ANY_SOURCE,
                  MPI_ANY_TAG,
                  MPI_COMM_WORLD,
                  &status);
 
-        buffer[result.index] = result.color;
+        aggregate_results(result);
     }
 
     debug_info("Laying off all the workers...\n");
     /* Tell all the workers to exit by sending an DIETAG. */
     for (rank = 1; rank < ntasks; ++rank)
     {
-        MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
+        MPI_Send(0, 0, mpi_result_type, rank, DIETAG, MPI_COMM_WORLD);
     }
 
 
@@ -297,71 +317,54 @@ master(void)
 static void
 worker(void)
 {
-    point_data work;
-    point_color result;
+    int work_y;
+    point_color *result;
     MPI_Status status;
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+
 
     debug_info( "Worker %i: initiating...\n", myrank );
     while(1)
     {
         /* Receive a message from the master */
-        MPI_Recv(&work, 1, mpi_pointdata_type, 0, MPI_ANY_TAG,
+        MPI_Recv(&work_y, 1, MPI_INT, 0, MPI_ANY_TAG,
                  MPI_COMM_WORLD, &status);
 
         /* Check the tag of the received message. */
-        if ( work.end == 1 || status.MPI_TAG == DIETAG ) {
+        if ( work_y == -1 || status.MPI_TAG == DIETAG ) {
             debug_info("Worker %i: dismissed.", myrank);
             return;
         }
 
+        // init result array
+        result = (point_color*)malloc(WIDTH*sizeof(point_color));
+
+
         /* Do the work */
-        result = do_work(work);
+        int x_index;
+        int chunk = ceil(WIDTH / numThreads);
+        double y_value = Y_MIN + delta_y * work_y;
+
+
+        omp_set_num_threads(numThreads);
+#pragma omp parallel shared(result,chunk, delta_y, delta_x, work_y) private(x_index)
+{
+#pragma omp for schedule(dynamic,chunk)
+        for(x_index = 0; x_index < (int)WIDTH ; x_index++)
+        {
+            double x_value = X_MIN + delta_x * x_index;
+            point_color pc;
+            pc.index = work_y*WIDTH + x_index;
+            pc.color = compute_point(x_value, y_value);
+
+            result[x_index] = pc;
+        }
+} // end pragma
 
         /* Send the result back */
-        MPI_Send(&result, 1, mpi_result_type, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(&result, WIDTH, mpi_result_type, 0, 0, MPI_COMM_WORLD);
     }
-}
-
-
-/**
- * @brief get_next_work_item
- * This function calculates the next point
- * for which will be calculated its color
- *
- * @return point_data
- */
-static point_data
-get_next_work_item(void)
-{
-    point_data next_work_unit;
-
-
-    if( cycle_x >= WIDTH )
-    {
-        cycle_x = 0;
-        cycle_y++;
-
-        // end cycle condition
-        if( cycle_y >= HEIGHT )
-        {
-            next_work_unit.end = 1;
-            return next_work_unit;
-        }
-    }
-
-    double y_value = Y_MIN + delta_y * cycle_y;
-    double x_value = X_MIN + delta_x * cycle_x;
-
-    next_work_unit.end = 0;
-    next_work_unit.x = cycle_x;
-    next_work_unit.y = cycle_y;
-    next_work_unit.x_value = x_value;
-    next_work_unit.y_value = y_value;
-    cycle_x++;
-
-    return next_work_unit;
 }
 
 
@@ -375,27 +378,5 @@ get_next_work_item(void)
 static void
 build_image()
 {
-    output_pgm("mandel_mpi",buffer, WIDTH, HEIGHT, 255);
+    output_pgm("mandel_mp2i",buffer, WIDTH, HEIGHT, 255);
 }
-
-
-/**
- * @brief do_work
- * Calculates the color of the given point
- * This function requires the function
- * declared in the mandel file, which has
- * the actual calculation code.
- *
- * @param p : point to caculate color
- * @return point_color : point index and color
- */
-static point_color
-do_work(point_data p)
-{
-    point_color pc;
-    pc.index = p.y*WIDTH + p.x;
-    pc.color = compute_point(p.x_value, p.y_value);
-
-    return pc;
-}
-

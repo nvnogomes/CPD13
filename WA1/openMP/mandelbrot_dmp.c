@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	  exit(1);
 	}
 
-  debug_info("Starting Mandelbrot sequential...\n");
+
 
   /* for timing */
   double startTime, elapsedTime;
@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
   // the chunks need to be less than the direct division
   // this way we take advantage of the dynamic behaviour
   // 4 is a random number that was selected
-  int chunk = ceil(WIDTH*HEIGHT / (numThreads * 6) );
+  int chunk = ceil(WIDTH*HEIGHT / (numThreads * 5) );
+
 
   debug_info("Computing image...\n");
   startTime = walltime( &clockZero );
@@ -51,15 +52,16 @@ int main(int argc, char *argv[])
   delta_x = (X_MAX - X_MIN)/WIDTH;
   delta_y = (Y_MAX - Y_MIN)/HEIGHT;
 
+  debug_info("Starting Mandelbrot dynamic openMP (Threads: %i; ChunkSize: %i)...\n", numThreads, chunk);
 
   omp_set_num_threads(numThreads);
 #pragma omp parallel shared(buffer,chunk) private(x,y)
   {
 #pragma omp for schedule(dynamic,chunk)
-  for (y=0;  y< (int)HEIGHT; y++)
+  for (y=0;  y < (int)HEIGHT; y++)
   {
       double y_value = Y_MIN + delta_y * y;
-      for (x=0; x< (int)WIDTH; x++)
+      for (x=0; x < (int)WIDTH; x++)
       {
           double x_value = X_MIN + delta_x * x;
           int index = y*WIDTH + x;

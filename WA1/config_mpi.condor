@@ -1,0 +1,14 @@
+######################################
+## Parallel submit description file
+######################################
+universe = parallel
+executable = /home/condor/libexec/lamscript
+arguments = bin/mandelbrot_mpi
+
+log = output/mpi_logfile
+output = output/mpi_outfile
+error = output/mpi_error
+
+#MC 1 2 4 8 12
+machine_count = 2
+queue 1

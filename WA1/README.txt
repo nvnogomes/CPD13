@@ -1,11 +1,24 @@
-Na pasta WA1/
+Na pasta raiz do trabalho (WA1/)
 
-Compilar programa em separada
-	genericamente make <comp_versao>
+Estrutura de ficheiros
+WA1/
+ D seq      - código mandel sequencial
+ D openMPI  - código mandel openmpi
+ D openMP2I - codigo mandel openMPI + openMP
+ D openCL   - código mandel openCL
+ D bin      - binários e objectos biblioteca
+ D lib      - biblioteca de funções
+ F mandel_X - imagem gerada através da tecnologia X
+
+
+COMPILAÇÃO
+
+Compilar programa em separado
+	 make <comp_versao>
 
 comp_versao:
-	seq
-	mpi
+	Sequencial - seq
+	MPI: mpi
 	dmp
 	smp
 	mp2i
@@ -26,7 +39,21 @@ versao:
 	mandelbrot_mp2i *
 	mandelbrot_cl *
 	
-Correr mpi
+* ainda não realizados
+
+
+
+Correr mpi localmente
 	mpirun -n <threads> ./bin/mandelbrot_mpi
 
-As imagens geradas pelos programas são criadas na pasta WA1/.
+Correr mpi no condor
+-Arrancar a máquina virtual é preciso fazer:
+	lamboot my-hosts
+
+-Desligar a máquina virtual:
+	lamhalt
+
+
+
+
+

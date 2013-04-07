@@ -83,3 +83,14 @@ do
 done
 avg=$(echo "$acc/10.0" | bc -l)
 echo -e "Average time:" $avg"s\n"
+
+
+echo "Timing openCL version"
+acc=0
+for i in `seq 1 10`;
+do
+    cexec=$(./bin/mandelbrot_cl);
+    acc=$(echo "$acc + $cexec" | bc);
+done
+avg=$(echo "$acc/10.0" | bc -l)
+echo -e "Average time:" $avg"s\n"

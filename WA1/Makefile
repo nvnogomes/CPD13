@@ -63,7 +63,7 @@ mp2i: mandel defs walltime
 	$(MPICC) $(CFLAGS) $(OMPFLAG) -o bin/mandelbrot_mp2i openMP2I/mandelbrot_mp2i.c bin/mandel.o bin/walltime.o bin/definitions.o
 
 cl: mandel defs walltime
-	$(CC) $(CL_INCLUDE) $(CL_LIBRARY) $(CL_FLAG) -o bin/mandelbrot_cl openCL/mandelbrot_cl.c bin/mandel.o bin/definitions.o bin/walltime.o
+	$(CC) $(CL_INCLUDE) -o bin/mandelbrot_cl openCL/mandelbrot_cl.c bin/mandel.o bin/definitions.o bin/walltime.o $(CL_FLAG) $(CL_LIBRARY) 
 
 
 clean:

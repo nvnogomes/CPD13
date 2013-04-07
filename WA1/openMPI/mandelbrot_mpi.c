@@ -147,7 +147,8 @@ main(int argc, char **argv)
         start = MPI_Wtime();
         master();
         finish = MPI_Wtime();
-        printf("\n\n Time elapsed: %e seconds", finish-start);
+        debug_info("Walltime (s): ");
+        printf("%e\n", finish-start);
 
     }
     else {

@@ -1,0 +1,11 @@
+O programa sequencial foi feito para obter uma referência de comparação com os tempos de execução em paralelo.
+Os tempos foram retirados com a função presente no ficheiro walltime.
+Foi corrido o programa dez vezes com os tempos que se seguem.
+
+Dual-Core
+Timing sequential version
+Average time: 7.401s
+
+Tomo-4
+Timing sequential version
+Average time: 4.075s

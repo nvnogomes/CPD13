@@ -1,0 +1,17 @@
+O programa sequencial foi feito para obter uma referência de comparação com os tempos de execução em paralelo.
+Os tempos foram retirados com a função presente no ficheiro walltime.
+Foi corrido o programa dez vezes com os tempos que se seguem.
+
+Running sequential version
+WallTime: 7.67s
+WallTime: 7.53s
+WallTime: 7.72s
+WallTime: 7.59s
+WallTime: 7.54s
+WallTime: 7.52s
+WallTime: 7.38s
+WallTime: 7.57s
+WallTime: 7.57s
+WallTime: 7.54s
+
+AVG: 7.563

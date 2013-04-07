@@ -1,0 +1,50 @@
+
+
+
+Versão estática
+
+DualCore
+Timing openMP version (static, 1 core)
+Average time: 7.201s
+
+Tomo-4
+Timing openMP version (static, 1 core)
+Average time: 4.404s
+
+Dual-Core
+Timing openMP version (static, 2 core)
+Average time: 5.326s
+
+Tomo-4
+Timing openMP version (static, 2 core)
+Average time: 3.082s
+
+
+Tomo-4
+Timing openMP version (static, 4 core)
+Average time: 2.161s
+
+
+
+Versão dinâmica
+
+Dual Core
+Timing openMP version (dynamic, 1 core)
+Average time: 7.458s
+
+Tomo-4
+Timing openMP version (dynamic, 1 core)
+Average time: 4.240s
+
+
+Dual Core
+Timing openMP version (dynamic, 2 core)
+Average time: 4.514s
+
+Tomo-4
+Timing openMP version (dynamic, 2 core)
+Average time: 2.310s
+
+Tomo-4
+Timing openMP version (dynamic, 4 core)
+Average time: 1.533s

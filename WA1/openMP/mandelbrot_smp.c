@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
   int buffer_size = WIDTH*HEIGHT;
 	int *buffer = malloc(buffer_size*sizeof(int));
-    int chunk = ceil(WIDTH*HEIGHT / numThreads);
+
 
 
 
@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
   delta_y = (Y_MAX - Y_MIN)/HEIGHT;
 
   omp_set_num_threads(numThreads);
-#pragma omp parallel shared(buffer,chunk) private(x,y)
+#pragma omp parallel shared(buffer) private(x,y)
   {
-#pragma omp for schedule(static,chunk)
+#pragma omp for schedule(static)
   for (y=0;  y < (int)HEIGHT; y++)
   {
       double y_value = Y_MIN + delta_y * y;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
           int index = y*WIDTH + x;
           int color = compute_point(x_value, y_value);
 
-#pragma omp critical
+//#pragma omp critical
           buffer[index] = color;
       }
   }
@@ -69,7 +69,8 @@ int main(int argc, char *argv[])
 
   elapsedTime = walltime( &startTime );
 
-  debug_info("WallTime: %.2fs\n", elapsedTime);
+  debug_info("Walltime (s): ");
+  printf("%.2f\n", elapsedTime);
   debug_info("Building image...\n");
   output_pgm("mandel_smp",buffer,WIDTH,HEIGHT,255);
 

@@ -4,7 +4,6 @@
 make clean
 make all
 
-
 # running the different version of
 echo "Taking times on a dual-core processor"
 echo -e "Each version will be run 10 times\n"
@@ -79,6 +78,17 @@ acc=0
 for i in `seq 1 10`;
 do
     cexec=$(./bin/mandelbrot_dmp 4);
+    acc=$(echo "$acc + $cexec" | bc);
+done
+avg=$(echo "$acc/10.0" | bc -l)
+echo -e "Average time:" $avg"s\n"
+
+
+echo "Timing openMPI version"
+acc=0
+for i in `seq 1 10`;
+do
+    cexec=$(mpirun -n 1 ./bin/mandelbrot_mpi);
     acc=$(echo "$acc + $cexec" | bc);
 done
 avg=$(echo "$acc/10.0" | bc -l)

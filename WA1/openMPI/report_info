@@ -1,17 +1,8 @@
-O programa sequencial foi feito para obter uma referência de comparação com os tempos de execução em paralelo.
-Os tempos foram retirados com a função presente no ficheiro walltime.
-Foi corrido o programa dez vezes com os tempos que se seguem.
+A estratégia neste parte do trabalho passou na construção de um master e diversos workers. O master entrega aos workers o ponto a calcular a cor e index correspondente. As trocas entre master e workers são feitas com uso a estruturas criadas para o efeito.
 
-Running sequential version
-WallTime: 7.67s
-WallTime: 7.53s
-WallTime: 7.72s
-WallTime: 7.59s
-WallTime: 7.54s
-WallTime: 7.52s
-WallTime: 7.38s
-WallTime: 7.57s
-WallTime: 7.57s
-WallTime: 7.54s
 
-AVG: 7.563
+Tempos retirados:
+
+Core2Duo
+Timing openMPI version (1 machine)
+Average time: s

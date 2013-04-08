@@ -228,7 +228,7 @@ master(void)
     {
         /* Get the next unit of work to be done */
         work = get_next_work_item();
-        if( work.end == 1 ){
+        if( work.end == 1  || work.y_value == -1 ){
             break;
         }
 
@@ -348,6 +348,7 @@ get_next_work_item(void)
         if( cycle_y >= HEIGHT )
         {
             next_work_unit.end = 1;
+            next_work_unit.y_value = -1;
             return next_work_unit;
         }
     }

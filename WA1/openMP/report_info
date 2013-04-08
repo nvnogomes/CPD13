@@ -1,50 +1,52 @@
+Na versão estática utilizando o openMP foi feita a paralelização nos ciclos for que geram o ponto a ser calculado. Foi criada uma zona paralela, na qual é feito um ciclo for com escalonamento estático com o chunk size a tomar o valor por defeito.
 
+Tempos retirados: 
 
-
-Versão estática
-
-DualCore
+Core2Duo
 Timing openMP version (static, 1 core)
 Average time: 7.201s
+
+Timing openMP version (static, 2 core)
+Average time: 5.326s
+
 
 Tomo-4
 Timing openMP version (static, 1 core)
 Average time: 4.404s
 
-Dual-Core
-Timing openMP version (static, 2 core)
-Average time: 5.326s
-
-Tomo-4
 Timing openMP version (static, 2 core)
 Average time: 3.082s
 
-
-Tomo-4
 Timing openMP version (static, 4 core)
 Average time: 2.161s
 
 
 
-Versão dinâmica
+A versão dinâmica com openMP seguio a mesma receita da versão estática, mas desta vez utilizando escalonamento dinâmico. O chunk size tomou o valor por defeito.
 
-Dual Core
+
+Tempos retirados:
+
+Core2Duo
 Timing openMP version (dynamic, 1 core)
 Average time: 7.458s
+
+Timing openMP version (dynamic, 2 core)
+Average time: 4.514s
+
 
 Tomo-4
 Timing openMP version (dynamic, 1 core)
 Average time: 4.240s
 
-
-Dual Core
-Timing openMP version (dynamic, 2 core)
-Average time: 4.514s
-
-Tomo-4
 Timing openMP version (dynamic, 2 core)
 Average time: 2.310s
 
-Tomo-4
 Timing openMP version (dynamic, 4 core)
 Average time: 1.533s
+
+
+
+Análise dos tempos:
+Os tempos foram o que seria de esperar, a versão dinâmica teve os melhores tempos devido à atribuição dinâmica de coordenadas a calcular. A versão estática tem o problema de poder existir àreas com maior exigência de computação e esta ficar mal distribuida pelas threads.
+As versões com apenas um processador, também confirmaram as expectativas ficando com tempos superiores ao tempo sequência para a mesma máquina. Isto deve-se ao overhead provocado pelas frameworks, que com apenas um processador não conseguem nenhuma melhoria dos tempos.

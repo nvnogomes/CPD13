@@ -3,7 +3,7 @@
 
 /**
  * debug info */
-#define DEBUG false
+#define DEBUG true
 
 
 /**

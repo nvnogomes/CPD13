@@ -1,0 +1,47 @@
+questões
+	linguagem? (Java, C++, C, Ruby, ...)
+	comunicação? (Sockets,RPC,RMI, ...)
+
+problema semelhante a ASD com rpc e lock server...
+falta parte das transacções...
+
+interface status (.h)
+ok (0)
+not_ok (1)
+
+
+AccountManagement
+-NACCOUNTS : int
+-accounts int[NACCOUNTS]
++writeAccount(+account_number, +value)
++readAccount(+account_number, -value)
+
+LockServer
+/* escritores
+ * só podem ser concedidos em exlusividade exigem 
+ * que mais nenhum processo (leitor ou escritor) 
+ * detenha um lock sobre a conta
+ */
+-writeLocks
+
+/* leitores
+ * usados pelos leitores; vários leitores podem ter 
+ * locks de leitura em simultâneo; 
+ * isto é um lock de leitura pode ser concedido desde 
+ * que nenhum processo detenha um lock de escrita
+ */
+-readLocks
+
+/**
+ * Em case de deadlock / erro:
+ *  1 Timeout ao fim de N segundos
+ *  2 Valor a ajustar
+ *  3 Resposta Not_ok
+ * A utilizar ( 1 -> ) 3
+ */
+
++lockWrite(+num_lock) : status
++unlockWrite(+num_lock) : status
++lockRead(+num_lock) : status
++unlockRead(+num_lock) : status
+

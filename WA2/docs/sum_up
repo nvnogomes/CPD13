@@ -2,8 +2,9 @@ questões
 	linguagem? (Java, C++, C, Ruby, ...)
 	comunicação? (Sockets,RPC,RMI, ...)
 
-problema semelhante a ASD com rpc e lock server...
-falta parte das transacções...
+problema semelhante a ASD com lock server...
+falta parte das transacções... proxima aula
+
 
 interface status (.h)
 ok (0)
@@ -12,9 +13,9 @@ not_ok (1)
 
 AccountManagement
 -NACCOUNTS : int
--accounts int[NACCOUNTS]
-+writeAccount(+account_number, +value)
-+readAccount(+account_number, -value)
+-accounts : int[NACCOUNTS]
++writeAccount(+account_number, +value) : status
++readAccount(+account_number, -value) : status
 
 LockServer
 /* escritores

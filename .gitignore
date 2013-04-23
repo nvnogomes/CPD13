@@ -2,3 +2,6 @@ cpd2013.*
 WA1/bin/*
 WA1/mandel*
 *~
+.classpath
+.project
+WA2/bin/*

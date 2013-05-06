@@ -18,6 +18,7 @@ public class BankDeamon extends Thread {
 	 * Deamon port.
 	 */
 	public final static int PORT = 47777;
+
 	
 	/**
 	 * Datagram socket.
@@ -30,12 +31,18 @@ public class BankDeamon extends Thread {
 	 */
 	private AccountManagement bank;
 	
+	
+	/**
+	 * Status of the deamon
+	 */
+	private boolean active;
+	
+	
 	/**
 	 * 
 	 * @param am Dependency Injection
 	 */
 	public BankDeamon(AccountManagement am) {
-		
 		bank = am;
 	}
 	
@@ -44,8 +51,13 @@ public class BankDeamon extends Thread {
 	 */
 	public void startDeamon() throws SocketException {
 		this.dSocket = new DatagramSocket(PORT);
-		
+		this.active = true;
 		start();
+	}
+	
+	public void stopDeamon() {
+		this.active = false;
+		this.dSocket.close();
 	}
 	
 	/**
@@ -53,23 +65,25 @@ public class BankDeamon extends Thread {
 	 */
 	public void run() {
 
-		while ( true ) {
+		while ( active ) {
 			byte[] buffer = new byte[2048];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-			BankMessage bMsg = new BankMessage();
+			BankMessage bMsg;
 			Status ret;
 			try {
 				dSocket.receive(packet);
-				bMsg.build( Converter.byteArrayToString(buffer) );
+				bMsg = BankMessage.build( Converter.byteArrayToString(buffer) );
 				
 				switch( bMsg.getOp() ) {
 				case READ:
 					ret = bank.readAccount(bMsg.getAccountId());
-					Message.send(packet, ret.toString());
+					System.out.println("READ OPERATION: "+ ret.getStat() +" "+ ret.getValue());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				case WRITE:
-					ret = bank.writeAccount(bMsg.getAccountId(),bMsg.getValue());
-					Message.send(packet, ret.toString());
+					ret = bank.writeAccount(bMsg.getAccountId(), bMsg.getValue());
+					System.out.println("WRITE OPERATION: "+ ret.getStat() +" "+ ret.getValue());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				default:
 					System.err.println("Unkonwn AccountManager operation");

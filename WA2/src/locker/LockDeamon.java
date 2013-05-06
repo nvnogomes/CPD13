@@ -6,7 +6,7 @@ import java.net.SocketException;
 
 
 import util.Converter;
-import util.LockerMessage;
+import util.LockMessage;
 import util.Message;
 import util.Status;
 
@@ -47,7 +47,7 @@ public class LockDeamon extends Thread {
 		while ( true ) {
 			byte[] buffer = new byte[2048];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-			LockerMessage lMsg = new LockerMessage();
+			LockMessage lMsg = new LockMessage();
 			Status ret;
 			try {
 				dSocket.receive(packet);
@@ -55,19 +55,19 @@ public class LockDeamon extends Thread {
 				switch(lMsg.getOp() ) {
 				case LREAD:
 					ret = locker.lockRead(lMsg.getAccountId());
-					Message.send(packet, ret.toString());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				case LWRITE:
 					ret = locker.lockWrite(lMsg.getAccountId());
-					Message.send(packet, ret.toString());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				case UREAD:
 					ret = locker.unlockRead(lMsg.getAccountId());
-					Message.send(packet, ret.toString());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				case UWRITE:
 					ret = locker.unlockWrite(lMsg.getAccountId());
-					Message.send(packet, ret.toString());
+					Message.sendResponse(packet.getSocketAddress(), ret.toString());
 					break;
 				default:
 					System.err.println("Unknown LockServer operation");

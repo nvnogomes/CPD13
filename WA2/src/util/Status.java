@@ -21,6 +21,12 @@ public class Status {
 		this.stat = Result.values()[stat];
 		this.value = value;
 	}
+	
+	public Status(Result stat, int value) {
+		super();
+		this.stat = stat;
+		this.value = value;
+	}
 
 
 	public Result getStat() {
@@ -33,11 +39,14 @@ public class Status {
 	}
 
 
-	public void build(String text) {
+	public static Status build(String text) {
 		String[] split = text.split(" ");
 		
-		this.stat = Result.valueOf(split[0]);
-		this.value = Integer.parseInt(split[1]);
+		Result stat = Result.valueOf(split[0]);
+		String valueStr = split[1].replaceAll("[^0-9]",""); // bug fix
+		int value = Integer.parseInt(valueStr);
+		
+		return new Status(stat,value);
 	}
 	
 	@Override

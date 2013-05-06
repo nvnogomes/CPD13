@@ -5,7 +5,7 @@ import util.Status;
 
 public class AccountManagement {
 	
-	
+	// operations offered by the bank
 	public static enum BANKOP {
 		WRITE,
 		READ,
@@ -69,7 +69,7 @@ public class AccountManagement {
 			this.accounts[account_id] = value;
 			
 			if( this.accounts[account_id] == value ) {
-				return new Status(0);
+				return new Status(0, value);
 			}
 		}
 		

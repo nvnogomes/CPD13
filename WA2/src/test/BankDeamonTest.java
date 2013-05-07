@@ -6,15 +6,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import util.BankMessage;
+import util.Deamon;
 import util.Status;
 import util.Status.Result;
 import bank.AccountManagement;
 import bank.BankDeamon;
+import bank.BankMessage;
 
 public class BankDeamonTest {
 
-	private BankDeamon bdm;
+	private Deamon bdm;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -44,7 +45,7 @@ public class BankDeamonTest {
 			Status stat = bm.send();
 			
 			Assert.assertTrue(stat.getStat() == Result.OK);
-			Assert.assertTrue(stat.getValue() == 0);
+			Assert.assertTrue(stat.getValue() == 20);
 		} catch (Exception e) {
 			Assert.fail("Address error");
 		}		
@@ -56,7 +57,7 @@ public class BankDeamonTest {
 		
 		try {
 			Status stat = bm.send();
-			Assert.assertTrue(stat.getStat() == Result.OK);
+			Assert.assertTrue(stat.getStat() == Result.NOT_OK);
 			Assert.assertTrue(stat.getValue() == 0);
 		} catch (Exception e) {
 			Assert.fail("Address error");

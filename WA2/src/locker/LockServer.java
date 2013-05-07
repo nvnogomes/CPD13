@@ -9,87 +9,161 @@ import bank.AccountManagement;
 
 public class LockServer {
 
-	private final int TIMEOUT = 10;
+	/**
+	 * Setting timeout for the lock attempt
+	 */
+	private final int TIMEOUT = 2;
 	private final TimeUnit UNIT = TimeUnit.SECONDS;
-	
-	public enum LOCKEROP {
-		LWRITE,
-		UWRITE,
-		LREAD,
-		UREAD,
+
+	/**
+	 * Operations recognized by the server
+	 */
+	public enum LOCKOP {
+		LWRITE, UWRITE, LREAD, UREAD,
 	}
-	
-	
-	private ReentrantLock mutex = new ReentrantLock();
-	
-	
+
+	/**
+	 * Singleton instance
+	 */
+	private static LockServer instance;
+
+	/**
+	 * Mutex crucial zones
+	 */
+	private ReentrantLock mutex = new ReentrantLock(true);
+
 	/**
 	 * Lock status of each account
 	 */
 	private ReentrantReadWriteLock[] accounts;
+
 	
-	
-	public LockServer() {
+	/**
+	 * Default Constructor
+	 */
+	private LockServer() {
 		accounts = new ReentrantReadWriteLock[AccountManagement.NACCOUNTS];
+		for (int i = 0; i < accounts.length; i++) {
+			accounts[i] = new ReentrantReadWriteLock(true);
+		}
 	}
-	
-	
+
+	/**
+	 * Checks if the given account number is within limits
+	 * 
+	 * @param account number
+	 * @return true if the number if valid, false otherwise
+	 */
+	private boolean isValidAccount(int account) {
+		return account >= 0 && account < AccountManagement.NACCOUNTS;
+	}
+
+	/**
+	 * Singleton Pattern
+	 * 
+	 * @return instance of the lock server
+	 */
+	public static LockServer getInstance() {
+		if (instance == null) {
+			instance = new LockServer();
+		}
+		return instance;
+	}
+
+	/**
+	 * Lock Write in the given account number
+	 * 
+	 * @param lockAcc account number
+	 * @return Status object
+	 * @throws InterruptedException
+	 */
 	public Status lockWrite(int lockAcc) throws InterruptedException {
-		int stat = 0;
-		
-		mutex.lock();
-		boolean acquired = accounts[lockAcc].writeLock().tryLock();
-		if( acquired == false ) {
-			acquired = accounts[lockAcc].writeLock().tryLock(TIMEOUT, UNIT);
-			if( acquired == false ){
-				stat = 1;
+		int stat = 1;
+
+		if (isValidAccount(lockAcc)) {
+			mutex.lock();
+			if (accounts[lockAcc].isWriteLockedByCurrentThread() == false) {
+				boolean acquired;
+				acquired = accounts[lockAcc].writeLock().tryLock(TIMEOUT, UNIT);
+				if (acquired) {
+					stat = 0;
+				}
 			}
+			mutex.unlock();
 		}
-		mutex.unlock();
-		
-		return new Status( stat );
+
+		return new Status(stat);
 	}
-	
+
+	/**
+	 * Unlocks the write operation of the account
+	 * 
+	 * @param lockAcc account number
+	 * @return Status
+	 */
 	public Status unlockWrite(int lockAcc) {
-		int stat;
-		
-		mutex.lock();
-		if( accounts[lockAcc].writeLock().getHoldCount() == 0 ){
-			stat = 1;
-		}
-		else {
-			accounts[lockAcc].writeLock().unlock();
-			stat = 0;
-		}
-		mutex.unlock();
-			
-		return new Status( stat );
-	}
-	
-	
-	public Status lockRead(int lockAcc) throws InterruptedException {
-		int stat = 0;
-		
-		mutex.lock();
-		boolean acquired = accounts[lockAcc].readLock().tryLock();
-		if( acquired == false ) {
-			acquired = accounts[lockAcc].readLock().tryLock(TIMEOUT, UNIT);
-			if( acquired == false ){
-				stat = 1;
+		int stat = 1;
+
+		if (isValidAccount(lockAcc)) {
+			mutex.lock();
+			if(accounts[lockAcc].isWriteLockedByCurrentThread() ) {
+				if (accounts[lockAcc].isWriteLocked()) {
+					accounts[lockAcc].writeLock().unlock();
+					stat = 0;
+				}
 			}
+			mutex.unlock();
 		}
-		mutex.unlock();
-		
-		return new Status( stat );
+
+		return new Status(stat);
 	}
-	
+
+	/**
+	 * Locks the account for reading
+	 * 
+	 * @param lockAcc account number
+	 * @return Status
+	 * @throws InterruptedException
+	 */
+	public Status lockRead(int lockAcc) throws InterruptedException {
+		int stat = 1;
+
+		if (isValidAccount(lockAcc)) {
+			mutex.lock();
+			if (accounts[lockAcc].isWriteLockedByCurrentThread() == false) {
+				boolean acquired;
+				acquired = accounts[lockAcc].readLock().tryLock(TIMEOUT, UNIT);
+
+				if (acquired) {
+					stat = 0;
+				}
+			}
+			mutex.unlock();
+		}
+
+		return new Status(stat);
+	}
+
+	/**
+	 * Unlocks the read lock for the current thread, this if the lockAcc is
+	 * valid and the current thread has a lock on it.
+	 * 
+	 * @param lockAcc account number
+	 * @return
+	 */
 	public Status unlockRead(int lockAcc) {
-		
-		mutex.lock();
-		accounts[lockAcc].readLock().unlock();
-		mutex.unlock();
-		
-		return new Status(0);
+		int stat = 1;
+
+		if (isValidAccount(lockAcc)) {
+			mutex.lock();
+			if (accounts[lockAcc].getReadHoldCount() > 0) {
+				accounts[lockAcc].readLock().unlock();
+				stat = 0;
+			}
+			mutex.unlock();
+		}
+
+		return new Status(stat);
 	}
-	
+
 }

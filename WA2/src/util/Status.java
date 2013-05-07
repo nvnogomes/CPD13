@@ -2,43 +2,77 @@ package util;
 
 public class Status {
 	
+	/**
+	 * 
+	 */
 	public enum Result {
 		OK,
 		NOT_OK,
 	}	
 	
-	public Result stat; 
-	public int value;
-
+	/**
+	 * 
+	 */
+	private Result stat;
 	
+	/**
+	 * 
+	 */
+	private int value;
+
+	/**
+	 * 
+	 * @param stat
+	 */
 	public Status(int stat) {
 		this(stat,0);
 	}
 	
 	
+	/**
+	 * 
+	 * @param stat
+	 * @param value
+	 */
 	public Status(int stat, int value) {
 		super();
 		this.stat = Result.values()[stat];
 		this.value = value;
 	}
 	
+	/**
+	 * 
+	 * @param stat
+	 * @param value
+	 */
 	public Status(Result stat, int value) {
 		super();
 		this.stat = stat;
 		this.value = value;
 	}
 
-
+	/**
+	 * 
+	 * @return
+	 */
 	public Result getStat() {
 		return stat;
 	}
 
-
+	
+	/**
+	 * 
+	 * @return
+	 */
 	public int getValue() {
 		return value;
 	}
 
-
+	/**
+	 * 
+	 * @param text
+	 * @return
+	 */
 	public static Status build(String text) {
 		String[] split = text.split(" ");
 		

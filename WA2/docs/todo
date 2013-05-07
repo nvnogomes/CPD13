@@ -1,11 +1,10 @@
-questões
-	linguagem? (Java, C++, C, Ruby, ...)
-	comunicação? (Sockets,RPC,RMI, ...)
-
-problema semelhante a ASD com lock server...
-falta parte das transacções... proxima aula
+TODO -----
+- implement tests suggested by the prof
+- implement the transaction manager
 
 
+
+INFO -----
 interface status (.h)
 ok (0)
 not_ok (1)
@@ -45,4 +44,8 @@ LockServer
 +unlockWrite(+num_lock) : status
 +lockRead(+num_lock) : status
 +unlockRead(+num_lock) : status
+
+
+
+
 

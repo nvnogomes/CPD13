@@ -93,10 +93,11 @@ public class LockDeamon extends Deamon {
 				break;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
+			// silence
+			// e.printStackTrace();
 		}
-		debug.show(lMsg.getOp() + " " + lMsg.getAccountId() + " : "
+		if( lMsg != null && ret != null )
+			debug.show(lMsg.getOp() + " " + lMsg.getAccountId() + " : "
 				+ ret.getStat());
 	}
 
@@ -111,7 +112,8 @@ public class LockDeamon extends Deamon {
 			ld.startDeamon();
 			System.out.println("LockDeamon running... ");
 		} catch (SocketException e) {
-			e.printStackTrace();
+			// silence
+			// e.printStackTrace();
 		}
 	}
 

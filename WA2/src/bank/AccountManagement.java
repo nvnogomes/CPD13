@@ -2,7 +2,7 @@ package bank;
 
 import util.Status;
 
-public class AccountManagement {
+public class AccountManagement implements IBankServer {
 
 	/**
 	 * operations offered by the bank

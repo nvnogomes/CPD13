@@ -8,7 +8,6 @@ import locker.LockMessage;
 import locker.LockServer;
 import locker.LockServer.LOCKOP;
 import util.Deamon;
-import util.Status;
 
 public class InteractiveLockCLI {
 
@@ -22,9 +21,10 @@ public class InteractiveLockCLI {
 		deamon.startDeamon();
 
 		Scanner scanIn = new Scanner(System.in);
+		System.out.println("Command: OP #ACCOUNT");
+		System.out.println("OP: LREAD UREAD LWRITE UWRITE");
 		do {
-			System.out.println("Available operations:");
-			System.out.println("LREAD UREAD LWRITE UWRITE");
+
 			System.out.print("> ");
 
 			String command = scanIn.nextLine();
@@ -32,13 +32,18 @@ public class InteractiveLockCLI {
 
 			if (split[0].toLowerCase() == "q")
 				break;
-
-			LOCKOP op = LOCKOP.valueOf(split[0].toUpperCase());
+			
+			LOCKOP op = null;
+			try {
+				op = LOCKOP.valueOf(split[0].toUpperCase());
+			} catch (Exception e) {
+				System.err.println("Error: Operation not recognized");
+				continue;
+			}
 			int account = Integer.parseInt(split[1]);
 			LockMessage lm = new LockMessage(op, account);
 
-			Status stat = lm.send();
-			System.out.println(stat.toString());
+			lm.send();
 
 		} while (true);
 

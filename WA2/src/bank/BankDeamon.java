@@ -25,7 +25,7 @@ public class BankDeamon extends Deamon {
 	/**
 	 * Bank accounts
 	 */
-	private AccountManagement bank;
+	private IBankServer bank;
 
 	/**
 	 * Debug object
@@ -39,7 +39,7 @@ public class BankDeamon extends Deamon {
 	 * @param am
 	 *            AccountManagement object
 	 */
-	public BankDeamon(AccountManagement am) {
+	public BankDeamon(IBankServer am) {
 		this(am, new Debug(true));
 	}
 
@@ -53,7 +53,7 @@ public class BankDeamon extends Deamon {
 	 * @param debugObj
 	 *            Debug object
 	 */
-	public BankDeamon(AccountManagement am, Debug debugObj) {
+	public BankDeamon(IBankServer am, Debug debugObj) {
 		bank = am;
 		debug = debugObj;
 	}
@@ -85,14 +85,10 @@ public class BankDeamon extends Deamon {
 			switch (bMsg.getOp()) {
 			case READ:
 				ret = bank.readAccount(bMsg.getAccountId());
-				System.out.println("READ " + bMsg.getAccountId() + ": "
-						+ ret.getStat() + " " + ret.getValue());
 				Message.sendResponse(packet.getSocketAddress(), ret.toString());
 				break;
 			case WRITE:
 				ret = bank.writeAccount(bMsg.getAccountId(), bMsg.getValue());
-				System.out.println("WRITE " + bMsg.getAccountId() + ": "
-						+ ret.getStat() + " " + ret.getValue());
 				Message.sendResponse(packet.getSocketAddress(), ret.toString());
 				break;
 			default:
@@ -101,8 +97,10 @@ public class BankDeamon extends Deamon {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			// silence
+			// e.printStackTrace();
 		}
+		if( bMsg != null )
 		debug.show(bMsg.getOp() + " " + bMsg.getAccountId() + " "
 				+ bMsg.getValue() + " : " + ret.getStat() + " "
 				+ ret.getValue());
@@ -120,7 +118,7 @@ public class BankDeamon extends Deamon {
 			ld.startDeamon();
 			System.out.println("BankDeamon running... ");
 		} catch (SocketException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 }

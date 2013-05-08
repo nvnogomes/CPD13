@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import util.Status;
 import bank.AccountManagement;
+import bank.IBankServer;
 
 public class BankTest {
 
@@ -15,7 +16,7 @@ public class BankTest {
 	 * EVERY TEST USES THE SAME OBJECT CHECK THE OBJECT STATUS
 	 * LEFT BY THE LAST TEST
 	 */
-	private AccountManagement acm;
+	private IBankServer acm;
 
 	@Before
 	public void setUp() throws Exception {

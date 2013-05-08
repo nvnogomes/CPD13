@@ -7,7 +7,7 @@ public class Message {
 	/**
 	 * Time in miliseconds to define a timeout uppon failed receiving of message
 	 */
-	private static final int TIMEOUT = 1000;
+	protected static final int TIMEOUT = 1000;
 
 	/**
 	 * Method that send and receives messages. This method can be accessed by

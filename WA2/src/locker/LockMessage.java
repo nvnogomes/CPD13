@@ -1,5 +1,7 @@
 package locker;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -90,12 +92,28 @@ public class LockMessage extends Message {
 	 * @return
 	 * @throws UnknownHostException
 	 */
-	public Status send() throws UnknownHostException {
+	public Status send() throws Exception {
 		InetAddress ip = InetAddress.getByName("127.0.0.1");
 		InetSocketAddress isa = new InetSocketAddress(ip, LockDeamon.PORT);
 
-		byte[] ret = Message.sendOperation(isa, this.toString());
-		return Status.build(Converter.byteArrayToString(ret));
+		DatagramSocket dSocket = new DatagramSocket();
+
+		byte[] buf = toString().getBytes();
+		DatagramPacket resp = new DatagramPacket(buf, buf.length, isa);
+		dSocket.send(resp);
+
+		byte[] buffer = new byte[2048];
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+		
+		try {
+			dSocket.setSoTimeout(Message.TIMEOUT);
+			dSocket.receive(packet);
+			dSocket.close();
+		} catch (Exception e) {
+			return new Status(1);
+		}
+
+		return Status.build(Converter.byteArrayToString(buffer));
 	}
 
 	@Override

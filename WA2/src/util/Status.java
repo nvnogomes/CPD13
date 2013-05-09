@@ -1,5 +1,6 @@
 package util;
 
+
 public class Status {
 	
 	/**
@@ -59,6 +60,13 @@ public class Status {
 		return stat;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isSuccess() {
+		return stat == Result.OK; 
+	}
 	
 	/**
 	 * 

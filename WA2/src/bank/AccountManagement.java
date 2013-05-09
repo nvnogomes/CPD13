@@ -44,6 +44,14 @@ public class AccountManagement implements IBankServer {
 		}
 		return instance;
 	}
+	
+	/**
+	 * 
+	 */
+	public void reset() {
+		instance = new AccountManagement();
+	}
+	
 
 	/**
 	 * Checks if the account is within bounds

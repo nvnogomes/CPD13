@@ -4,16 +4,32 @@ import util.Status;
 
 public interface ILockServer {
 
-	
-	public void reset();
-	
+	/**
+	 * 
+	 * @param accountNum
+	 * @return
+	 */
 	public Status lockWrite(int accountNum);
-	
+
+	/**
+	 * 
+	 * @param accountNum
+	 * @return
+	 */
 	public Status unlockWrite(int accountNum);
-	
-	public Status lockRead(int accountNum) throws InterruptedException;
-	
+
+	/**
+	 * 
+	 * @param accountNum
+	 * @return
+	 */
+	public Status lockRead(int accountNum);
+
+	/**
+	 * 
+	 * @param accountNum
+	 * @return
+	 */
 	public Status unlockRead(int accountNum);
-	
-	
+
 }

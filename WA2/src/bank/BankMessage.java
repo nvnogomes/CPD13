@@ -114,10 +114,19 @@ public class BankMessage extends Message {
 	public static BankMessage build(String text) {
 		String[] split = text.split(" ");
 
-		BANKOP op = BANKOP.valueOf(split[0]);
+		BANKOP op = null;
+		try {
+			op = BANKOP.valueOf(split[0].toUpperCase());
+		} catch (Exception e) {
+			return null;
+		}
+
 		int accountId = Integer.parseInt(split[1]);
-		String valueStr = split[2].replaceAll("[^0-9]", ""); // bug fix
-		int value = Integer.parseInt(valueStr);
+		int value = 0;
+		if( split.length == 3 ) {
+			String valueStr = split[2].replaceAll("[^0-9]", ""); // bug fix
+			value = Integer.parseInt(valueStr);			
+		}
 
 		return new BankMessage(op, accountId, value);
 	}

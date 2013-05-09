@@ -6,7 +6,6 @@ import java.util.Scanner;
 import locker.LockDeamon;
 import locker.LockMessage;
 import locker.LockServer;
-import locker.LockServer.LOCKOP;
 import util.Deamon;
 
 public class InteractiveLockCLI {
@@ -28,22 +27,11 @@ public class InteractiveLockCLI {
 			System.out.print("> ");
 
 			String command = scanIn.nextLine();
-			String[] split = command.split(" ");
-
-			if (split[0].toLowerCase() == "q")
+			if (command.toLowerCase().equalsIgnoreCase("q"))
 				break;
-			
-			LOCKOP op = null;
-			try {
-				op = LOCKOP.valueOf(split[0].toUpperCase());
-			} catch (Exception e) {
-				System.err.println("Error: Operation not recognized");
-				continue;
-			}
-			int account = Integer.parseInt(split[1]);
-			LockMessage lm = new LockMessage(op, account);
 
-			lm.send();
+			LockMessage bm = LockMessage.build(command);
+			bm.send();
 
 		} while (true);
 

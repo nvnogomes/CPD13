@@ -80,7 +80,13 @@ public class LockMessage extends Message {
 	public static LockMessage build(String text) {
 		String[] split = text.split(" ");
 
-		LOCKOP op = LOCKOP.valueOf(split[0]);
+		LOCKOP op = null;
+		try {
+			op = LOCKOP.valueOf(split[0].toUpperCase());
+		} catch (Exception e) {
+			return null;
+		}
+		
 		String valueStr = split[1].replaceAll("[^0-9]", ""); // bug fix
 		int account = Integer.parseInt(valueStr);
 

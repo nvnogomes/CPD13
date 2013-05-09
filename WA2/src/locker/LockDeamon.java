@@ -30,13 +30,13 @@ public class LockDeamon extends Deamon {
 	/**
 	 * 
 	 */
-	private LockServer locker;
+	private ILockServer locker;
 
 	/**
 	 * 
 	 * @param ls
 	 */
-	public LockDeamon(LockServer ls) {
+	public LockDeamon(ILockServer ls) {
 		this(ls, new Debug(true));
 	}
 
@@ -45,7 +45,7 @@ public class LockDeamon extends Deamon {
 	 * @param ls
 	 * @param debugObj
 	 */
-	public LockDeamon(LockServer ls, Debug debugObj) {
+	public LockDeamon(ILockServer ls, Debug debugObj) {
 		locker = ls;
 		debug = debugObj;
 	}
@@ -97,7 +97,7 @@ public class LockDeamon extends Deamon {
 			// e.printStackTrace();
 		}
 		if( lMsg != null && ret != null )
-			debug.show(lMsg.getOp() + " " + lMsg.getAccountId() + " : "
+			debug.show(lMsg.getOp() + "\t" + lMsg.getAccountId() + " : "
 				+ ret.getStat());
 	}
 
@@ -114,6 +114,9 @@ public class LockDeamon extends Deamon {
 		} catch (SocketException e) {
 			// silence
 			// e.printStackTrace();
+		}
+		finally {
+			ld.stopDeamon();
 		}
 	}
 

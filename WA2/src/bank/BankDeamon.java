@@ -101,7 +101,7 @@ public class BankDeamon extends Deamon {
 			// e.printStackTrace();
 		}
 		if( bMsg != null )
-		debug.show(bMsg.getOp() + " " + bMsg.getAccountId() + " "
+		debug.show(bMsg.getOp() + "\t" + bMsg.getAccountId() + " "
 				+ bMsg.getValue() + " : " + ret.getStat() + " "
 				+ ret.getValue());
 	}
@@ -113,12 +113,16 @@ public class BankDeamon extends Deamon {
 	 */
 	public static void main(String[] args) {
 
-		BankDeamon ld = new BankDeamon(AccountManagement.getInstance());
+		BankDeamon bd = new BankDeamon(AccountManagement.getInstance());
 		try {
-			ld.startDeamon();
+			bd.startDeamon();
 			System.out.println("BankDeamon running... ");
 		} catch (SocketException e) {
+			// silence
 			// e.printStackTrace();
+		}
+		finally {
+			bd.stopDeamon();
 		}
 	}
 }

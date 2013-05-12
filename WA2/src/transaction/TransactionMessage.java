@@ -1,7 +1,13 @@
 package transaction;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+
 import transaction.TransactionManager.TRANSOP;
+import util.Converter;
 import util.Message;
+import util.Status;
 
 public class TransactionMessage extends Message {
 
@@ -86,5 +92,26 @@ public class TransactionMessage extends Message {
 		}
 
 		return new TransactionMessage(op, account, value);
+	}
+	
+	@Override
+	public String toString() {
+		return op +" "+ accountId +" "+ value;
+	}
+	
+	
+	/**
+	 * Sends message to the Transaction deamon and waits for response
+	 * 
+	 * @return
+	 * @throws UnknownHostException
+	 */
+	public Status send() throws UnknownHostException {
+
+		InetAddress ip = InetAddress.getByName("127.0.0.1");
+		InetSocketAddress isa = new InetSocketAddress(ip, TransactionDeamon.PORT);
+
+		byte[] ret = Message.sendOperation(isa, this.toString());
+		return Status.build(Converter.byteArrayToString(ret));
 	}
 }

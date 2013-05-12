@@ -68,6 +68,7 @@ public class TransactionManager implements ITransactionServer {
         acm = AccountManagement.getInstance();
 
 	}
+
 	
 	/**
 	 * 
@@ -80,6 +81,12 @@ public class TransactionManager implements ITransactionServer {
 		
 		return instance;
 	}
+	
+	
+	public void reset() {
+		instance = new TransactionManager();
+	}
+	
 	
 	/**
 	 * 
@@ -118,7 +125,7 @@ public class TransactionManager implements ITransactionServer {
 				opResult = ls.unlockRead(tl.accountId);
 			}
 			
-			// somethign when wrong
+			// something wrong
 			if(opResult.isSuccessful() == false ){
 				return -1;
 			}
@@ -161,8 +168,15 @@ public class TransactionManager implements ITransactionServer {
 	public int readT(int accountNum) {
 
 		// register the operation
-		log.get(currentId).addRead(accountNum);
-		
+		if( log.containsKey(currentId) ) {
+			Transaction t = log.get(currentId);
+			t.addRead(accountNum);
+		}
+		else {
+			System.err.println("NOP");
+			System.out.println( log.size() );
+			System.exit(1);
+		}
 		
         if(ls.lockRead(accountNum).isSuccessful() ){
         	return 0;

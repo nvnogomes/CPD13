@@ -1,14 +1,17 @@
 package transaction;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import locker.ILockServer;
+import locker.LockServer;
+import util.Status;
+import bank.AccountManagement;
+import bank.IBankServer;
 
 /**
  * Transaction Manager implementation
- * 
- * Decision to be made.
- * 1 - Strategy (locks, timestamp?)
- *
  */
 public class TransactionManager implements ITransactionServer {
 
@@ -29,6 +32,16 @@ public class TransactionManager implements ITransactionServer {
 	 */
 	protected Map<Integer,Transaction> log;
 	
+	/**
+	 * 
+	 */
+    protected ILockServer ls;
+    
+    /**
+     * 
+     */
+    protected IBankServer acm;
+	
 
 	/**
 	 * 
@@ -47,6 +60,13 @@ public class TransactionManager implements ITransactionServer {
 	private TransactionManager() {
 		log = new HashMap<Integer,Transaction>();
 		currentId = 0;
+
+        //lockServer
+        ls = LockServer.getInstance();
+        
+        //AccountManager
+        acm = AccountManagement.getInstance();
+
 	}
 	
 	/**
@@ -61,6 +81,10 @@ public class TransactionManager implements ITransactionServer {
 		return instance;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private int getNextId() {
 		currentId++;
 		return currentId;
@@ -71,50 +95,99 @@ public class TransactionManager implements ITransactionServer {
 	public int beginT() {
 		int id = getNextId();
 		log.put(id, new Transaction());
-		
+
 		return id;
 	}
 
 	@Override
 	public int commitT(int transactionId) {
-		// TODO
+
+		Transaction t = log.get(transactionId);
+		Iterator<TransactLog> it = t.getIterator();
 		
-		// schedule events?
+		TransactLog tl = null;
+		
+		while(it.hasNext()){
+			tl = it.next();
+			
+			Status opResult;
+			if(tl.isWriteOperation()){
+				opResult = ls.unlockWrite(tl.accountId);
+			}
+			else{
+				opResult = ls.unlockRead(tl.accountId);
+			}
+			
+			// somethign when wrong
+			if(opResult.isSuccessful() == false ){
+				return -1;
+			}
+		}
+		
 		return 0;
 	}
 
 	@Override
 	public int abortT(int transactionId) {
-		// TODO
+		
+		Transaction t = log.get(transactionId);
+		Iterator<TransactLog> it = t.getIterator();
+		
+		TransactLog tl = null;
+		
+		while(it.hasNext()){
+			tl = it.next();
+			
+			if(tl.isWriteOperation()){
+				int writeStat = writeT(tl.accountId, tl.oldValue);
+				
+				// retry
+				if( writeStat == -1 ) {
+					try {
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					abortT(transactionId);
+				}
+			}
+		}
 		
 		// restore old values
 		return 0;
 	}
 
 	@Override
-	public int readT(int accontNum) {
-		// TODO
+	public int readT(int accountNum) {
+
+		// register the operation
+		log.get(currentId).addRead(accountNum);
 		
-		// get Lock
 		
-		
-		// log event
-		log.get(currentId).addRead(accontNum);
-		return 0;
+        if(ls.lockRead(accountNum).isSuccessful() ){
+        	return 0;
+        }
+		return -1;
 	}
 
+	
 	@Override
-	public int writeT(int accontNum, int balance) {
-		// TODO
-		// get old value
-		int oldVal = 0;
+	public int writeT(int accountNum, int balance) {
 		
-		// get write lock
+		// get old value through a readT
+		int oldVal = readT(accountNum);
+		if( oldVal == -1 ) {
+			return -1;
+		}
 		
-		// log event
-		log.get(currentId).addWrite(accontNum, oldVal, balance);
+		// register operation
+		log.get(currentId).addWrite(accountNum, oldVal, balance);
 		
-		return 0;
+		// acquire write lock and update account. write unlock account
+		if( ls.lockWrite(accountNum).isSuccessful() ){
+			return 0;
+		}
+		return -1;
 	}
 
 }

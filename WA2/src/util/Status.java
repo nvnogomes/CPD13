@@ -64,7 +64,7 @@ public class Status {
 	 * 
 	 * @return
 	 */
-	public boolean isSuccess() {
+	public boolean isSuccessful() {
 		return stat == Result.OK; 
 	}
 	

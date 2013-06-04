@@ -1,0 +1,25 @@
+Algorithmic Skeletons
+	MapReduce, 	parte 2 ?
+	ForAll,		parte 1 ?
+	Divide&Conquer
+
+Pipes
+    adicionar stages ao pipe
+    para correr o programa invocar no objecto pipe.run_and_wait_end()
+
+Nós (elementos)
+    classes que estendam a classe ff_node
+    estas classes devem implementar o método
+        void *svc(void *task)
+        opcionais
+        int svc_init()
+        int svc_end()
+
+    envio de valores para outros elementos através do método ff_send_out()
+
+
+Farm
+    ff::ff_farm<> farm
+farm.add workers(workers);
+farm.add emitter(new Emitter(nTasks));
+farm.add collector(new Collector);

@@ -1,6 +1,9 @@
 #include <iostream>
+#include <map>
 #include <ff/pipeline.hpp>
 #include <ff/farm.hpp>
+
+#include "readImage.c"
 
 /**
  * @brief The Worker class
@@ -28,19 +31,26 @@
  *
  */
 
+    // shared image buffer
+    char* image;
 
 
 /**
  * @brief The Emitter class
+ *
+ * distribute strips of the image
  */
 class Emitter: public ff_node {
 
+    long sideSize;
+    int offSet;
 
-    Emitter(int ntask)
-        :ntask(ntask)
+
+    Emitter(int size)
+        :sideSize(size), offSet(0)
     {}
 
-    long ntask;
+
 
     int svc_init () {
         printf ("Work Start\n");
@@ -49,7 +59,8 @@ class Emitter: public ff_node {
 
     void *svc(void *)
     {
-        long task = new task_t(ntask--);
+        long task = new task_t(offSet + sideSize);
+        offSet = sideSize;
         return (void*) task;
     }
 
@@ -62,34 +73,57 @@ class Emitter: public ff_node {
 
 /**
  * @brief The Worker class
+ *
+ * creates a histogram of the strip received
  */
 class Worker : public ff_node
 {
+    std::map<char,int> histogram;
+
+    void svc_init()
+    {
+    }
 
 
     void *svc(void *task)
     {
 
+        unsigned char* strip = (unsigned char*) task;
+        for( int currentIndex = 0; currentIndex < imageSize; currentIndex++ )
+        {
+            unsigned char currentVoxel = strip[currentIndex];
+            histogram[currentVoxel]++;
+        }
+        return (void *) histogram;
     }
-
-
 };
 
 
 /**
  * @brief The Collector class
+ *
+ * reduce all the histograms
+ * calculates L1 and L2
  */
 class Collector: public ff_node
 {
+    std::map<char,int> global_histogram;
+
     void *svc(void *task)
     {
-        printf ("Task=%d\n",(long)task);
+        std::map<char,int> partial_histogram = (std::map<char,int>*) task;
+        std::map<char,int>::const_iterator it = partial_histogram.begin();
+        for( ; it != it_end; ++it)
+        {
+           global_histogram.insert(*it);
+        }
         delete task;
         return GO_ON;
     }
 
     void svc_end()
     {
+        // calculate L1 and L2 ?
         printf ("Done!\n");
     }
 
@@ -97,9 +131,34 @@ class Collector: public ff_node
 
 
 
-
-int main()
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main(int argc, char *argv[])
 {
+    if( argc != 2 )
+    {
+        perror("USAGE: histogram #workers imageSize");
+    }
+
+    int nWorkers = atoi(argv[1]);
+    int imageSize = atoi(argv[2]);
+
+    ff_farm<> farm;
+    std::vector<ff_node*> workers;
+    for(int i=0; i < nWorkers; ++i)
+    {
+        workers.push_back(new Worker);
+    }
+
+    unsigned char *image = readImage("cube_"+ size +".mat");
+
+    farm.add_workers(workers);
+    farm.add_emitter(new Emitter(image, imageSize));
+    farm.add_collector(new Collector);
 
 
 }

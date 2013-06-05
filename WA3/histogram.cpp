@@ -31,8 +31,9 @@
  *
  */
 
-    // shared image buffer
-    char* image;
+
+// shared image buffer
+unsigned char* imageBuffer;
 
 
 /**
@@ -40,7 +41,7 @@
  *
  * distribute strips of the image
  */
-class Emitter: public ff_node {
+class Emitter: public ff::ff_node {
 
     long sideSize;
     int offSet;
@@ -53,7 +54,7 @@ class Emitter: public ff_node {
 
 
     int svc_init () {
-        printf ("Work Start\n");
+        printf ("Work Started\n");
     }
 
 
@@ -68,17 +69,15 @@ class Emitter: public ff_node {
 };
 
 
-
-
-
 /**
  * @brief The Worker class
  *
  * creates a histogram of the strip received
  */
-class Worker : public ff_node
+class Worker : public ff::ff_node
 {
     std::map<char,int> histogram;
+
 
     void svc_init()
     {
@@ -87,7 +86,6 @@ class Worker : public ff_node
 
     void *svc(void *task)
     {
-
         unsigned char* strip = (unsigned char*) task;
         for( int currentIndex = 0; currentIndex < imageSize; currentIndex++ )
         {
@@ -105,7 +103,7 @@ class Worker : public ff_node
  * reduce all the histograms
  * calculates L1 and L2
  */
-class Collector: public ff_node
+class Collector: public ff::ff_node
 {
     std::map<char,int> global_histogram;
 
@@ -118,7 +116,7 @@ class Collector: public ff_node
            global_histogram.insert(*it);
         }
         delete task;
-        return GO_ON;
+        return ff::GO_ON;
     }
 
     void svc_end()
@@ -147,17 +145,17 @@ int main(int argc, char *argv[])
     int nWorkers = atoi(argv[1]);
     int imageSize = atoi(argv[2]);
 
-    ff_farm<> farm;
-    std::vector<ff_node*> workers;
+    ff::ff_farm<> farm;
+    std::vector<ff::ff_node*> workers;
     for(int i=0; i < nWorkers; ++i)
     {
         workers.push_back(new Worker);
     }
 
-    unsigned char *image = readImage("cube_"+ size +".mat");
+    imageBuffer = readImage("cube_"+ imageSize +".mat");
 
     farm.add_workers(workers);
-    farm.add_emitter(new Emitter(image, imageSize));
+    farm.add_emitter(new Emitter(imageSize));
     farm.add_collector(new Collector);
 
 

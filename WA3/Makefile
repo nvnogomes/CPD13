@@ -6,7 +6,7 @@ CFLAGS  = -g -Wall
 
 
 # FastFlow library
-INCFF = -I fastflow-2.0.1
+INCFF = -I fastflow-2.0.1/
 
 # POSIX Threads
 PTHREAD = -lpthread
@@ -16,11 +16,15 @@ PTHREAD = -lpthread
 .SILENT:	# don't echo commands executed
 
 
-all: shadow
+all: histogram segmentation 
 
 # PROGRAMS
-shadow: 
-	$(CC) $(CFLAGS) $(PTHREAD) -o bin/skeleton skeleton.cpp
+histogram: 
+	$(CC) $(CFLAGS) $(INCFF) $(PTHREAD) -o bin/histogram histogram.cpp
+
+segmentation: 
+	$(CC) $(CFLAGS) $(INCFF) $(PTHREAD) -o bin/segmentation bi-segmentation.cpp
+
 
 clean:
-	rm -f bin/skeleton
+	rm -f bin/*

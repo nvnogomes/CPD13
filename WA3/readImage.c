@@ -19,7 +19,7 @@ unsigned char *readImage( char *fileName){
 	printf("L=%d H= %d P= %d\n", l, h, p);
 	fseek( f, OFFSET, SEEK_SET);
 	
-	pt = malloc(l*h*p);
+    pt = (unsigned char*) malloc(l*h*p);
 	fread(pt, 1, l*h*p, f);
 	return pt;
 }

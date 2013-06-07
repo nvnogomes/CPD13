@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <string>
 #include <ff/pipeline.hpp>
 #include <ff/farm.hpp>
 
@@ -24,6 +25,15 @@
 
 
 /**
+ * @todo
+ *  1. read image
+ *  2. decide structure
+ *  2.1 passing map by reference
+ *  3. pipeline
+ */
+
+
+/**
  * @brief Skeleton
  *
  * pipelining
@@ -36,6 +46,7 @@
 unsigned char* imageBuffer;
 
 
+
 /**
  * @brief The Emitter class
  *
@@ -43,30 +54,34 @@ unsigned char* imageBuffer;
  */
 class Emitter: public ff::ff_node {
 
-    long sideSize;
+private:
+    int sideSize;
     int offSet;
 
+public:
+    Emitter(int size);
 
-    Emitter(int size)
-        :sideSize(size), offSet(0)
-    {}
-
-
-
-    int svc_init () {
-        printf ("Work Started\n");
-    }
-
-
-    void *svc(void *)
-    {
-        long task = new task_t(offSet + sideSize);
-        offSet = sideSize;
-        return (void*) task;
-    }
-
-
+    int svc_init ();
+    void *svc(void *);
 };
+
+Emitter::Emitter(int size)
+    : sideSize(size), offSet(0)
+{}
+
+int Emitter::svc_init()
+{
+    printf ("Work Started\n");
+    return 0;
+}
+
+void* Emitter::svc(void *)
+{
+    // task?? how to create a task to the next stage??
+    int task = offSet + sideSize;
+    offSet = sideSize;
+    return (void*) task;
+}
 
 
 /**
@@ -74,27 +89,34 @@ class Emitter: public ff::ff_node {
  *
  * creates a histogram of the strip received
  */
-class Worker : public ff::ff_node
+class Worker: public ff::ff_node
 {
+
+private:
     std::map<char,int> histogram;
 
-
-    void svc_init()
-    {
-    }
-
-
-    void *svc(void *task)
-    {
-        unsigned char* strip = (unsigned char*) task;
-        for( int currentIndex = 0; currentIndex < imageSize; currentIndex++ )
-        {
-            unsigned char currentVoxel = strip[currentIndex];
-            histogram[currentVoxel]++;
-        }
-        return (void *) histogram;
-    }
+public:
+    int svc_init();
+    void *svc(void *task);
 };
+
+int Worker::svc_init()
+{
+    return 0;
+}
+
+void* Worker::svc(void* task)
+{
+    unsigned char* strip = (unsigned char*) task;
+    std::cout << "strip" << std::endl;
+    int imageSize = strlen((char*)strip);
+    for( int currentIndex = 0; currentIndex < imageSize; currentIndex++ )
+    {
+        unsigned char currentVoxel = strip[currentIndex];
+        histogram[currentVoxel]++;
+    }
+    return (void *) &histogram;
+}
 
 
 /**
@@ -103,30 +125,41 @@ class Worker : public ff::ff_node
  * reduce all the histograms
  * calculates L1 and L2
  */
-class Collector: public ff::ff_node
+class Collector : public ff::ff_node
 {
+private:
     std::map<char,int> global_histogram;
 
-    void *svc(void *task)
-    {
-        std::map<char,int> partial_histogram = (std::map<char,int>*) task;
-        std::map<char,int>::const_iterator it = partial_histogram.begin();
-        for( ; it != it_end; ++it)
-        {
-           global_histogram.insert(*it);
-        }
-        delete task;
-        return ff::GO_ON;
-    }
-
-    void svc_end()
-    {
-        // calculate L1 and L2 ?
-        printf ("Done!\n");
-    }
+public:
+    void *svc(void *task);
+    void svc_end();
+    void appendMap(std::map<char,int> map);
 
 };
 
+void* Collector::svc(void *task)
+{
+    std::map<char,int> *partial_histogram = (std::map<char,int>*) task;
+
+    appendMap( *partial_histogram );
+
+    return GO_ON;
+}
+
+void Collector::appendMap(std::map<char,int> map)
+{
+    std::map<char,int>::const_iterator it = map.begin();
+    for( ; it != map.end(); ++it)
+    {
+       global_histogram.insert(*it);
+    }
+}
+
+void Collector::svc_end()
+{
+    // calculate L1 and L2 ?
+    printf ("Done!\n");
+}
 
 
 /**
@@ -137,9 +170,11 @@ class Collector: public ff::ff_node
  */
 int main(int argc, char *argv[])
 {
-    if( argc != 2 )
+    if( argc != (2 + 1) )
     {
-        perror("USAGE: histogram #workers imageSize");
+        std::cerr << "USAGE: histogram #workers image_file ("
+                  << argc << ")" << std::endl;
+        exit(1);
     }
 
     int nWorkers = atoi(argv[1]);
@@ -152,11 +187,11 @@ int main(int argc, char *argv[])
         workers.push_back(new Worker);
     }
 
-    imageBuffer = readImage("cube_"+ imageSize +".mat");
+    imageBuffer = readImage( argv[2] );
 
-    farm.add_workers(workers);
     farm.add_emitter(new Emitter(imageSize));
+    farm.add_workers(workers);
     farm.add_collector(new Collector);
 
-
+    return 0;
 }

@@ -210,9 +210,9 @@ protected:
      *
      */
     virtual bool schedule_task(void * task, unsigned int retry=(unsigned)-1, unsigned int ticks=0) {
-        register unsigned int cnt,cnt2;
+        register unsigned int cnt;
         do {
-            cnt=0,cnt2=0;
+            cnt=0;
             do {
                 nextw = selectworker();
 #if defined(LB_CALLBACK)

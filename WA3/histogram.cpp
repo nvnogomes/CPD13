@@ -45,10 +45,11 @@
 
 
 // shared image buffer
-static char* imageBuffer;
+static unsigned char* imageBuffer;
 static int imageSize;
 
-static ff::ff_allocator allocator;
+static std::map<char,int> histogram;
+
 
 
 
@@ -97,7 +98,6 @@ int Emitter::svc_init()
  */
 void* Emitter::svc(void *)
 {
-    std::cout << ".";
     while(repetitionsLeft >= 0)
     {
         char *imageStrip = (char *) malloc((imageSize+1)*sizeof(char));
@@ -132,9 +132,6 @@ void Emitter::svc_end()
 class Worker: public ff::ff_node
 {
 
-private:
-    std::map<char,int> histogram;
-
 public:
     int svc_init();
     void *svc(void *task);
@@ -151,15 +148,12 @@ void* Worker::svc(void* task)
     char* strip = (char*) task;
     int imageSize = strlen(strip);
 
-    std::cout << strip << std::endl;
     for( int currentIndex = 0; currentIndex < imageSize; currentIndex++ )
     {
         unsigned char currentVoxel = strip[currentIndex];
         histogram[currentVoxel]++;
-        std::cout << ".";
     }
-    std::cout << std::endl;
-    return (void *) task;
+    return (void *) histogram.size();
 }
 
 void Worker::svc_end()
@@ -175,14 +169,11 @@ void Worker::svc_end()
  */
 class Collector : public ff::ff_node
 {
-private:
-    std::map<char,int> global_histogram;
 
 public:
     int svc_init();
     void *svc(void *task);
     void svc_end();
-    void appendMap(std::map<char,int> map);
 
 };
 
@@ -194,25 +185,15 @@ int Collector::svc_init()
 
 void* Collector::svc(void *task)
 {
-//    std::map<char,int> *partial_histogram = (std::map<char,int>*) task;
-
-//    appendMap( *partial_histogram );
-
     return GO_ON;
-}
-
-void Collector::appendMap(std::map<char,int> map)
-{
-    std::map<char,int>::const_iterator it = map.begin();
-    for( ; it != map.end(); ++it)
-    {
-       global_histogram.insert(*it);
-    }
 }
 
 void Collector::svc_end()
 {
-    // calculate L1 and L2 ?
+    std::map<char,int>::iterator it = histogram.begin();
+    for(; it != histogram.end(); it++ ) {
+        std::cout << it->first << " " << it->second << std::endl;
+    }
     std::cout << "Done!" << std::endl;
 }
 
@@ -221,18 +202,10 @@ void Collector::svc_end()
 
 
 static void
-readImage(std::string filename, int size)
+bufferImage(char* filename, int size)
 {
-    std::ifstream iFile;
-    iFile.open( filename.c_str(), std::ios::in|std::ios::binary );
-    iFile.seekg(0); // set the pointer to the beginning
-
-    imageBuffer = 0;
-
-    imageBuffer = new char[ size + 1 ];
-    iFile.read( imageBuffer, size );
-    imageBuffer[size] = '\0' ; // set '\0'
-    std::cout << "Image read (" << strlen((const char*)imageBuffer) << ")" << std::endl;
+    imageBuffer = (unsigned char*) malloc(sizeof(unsigned char)*size*size*size);
+    imageBuffer = readImage(filename);
 }
 
 
@@ -248,7 +221,7 @@ int main(int argc, char *argv[])
 {
     int nWorkers = 10;
     imageSize = 400;
-    std::string imageFile = "/home/nvno/fct/CPD/workspace/WA3/images/cube_400.mat";
+    char* imageFile = "/home/nvno/fct/CPD/workspace/WA3/images/cubo_400.mat";
 
     if( argc == 4 )
     {
@@ -260,7 +233,7 @@ int main(int argc, char *argv[])
         imageFile = argv[3];
     }
 
-    readImage(imageFile, imageSize);
+    bufferImage(imageFile, imageSize);
 
     ff::ff_farm<> farm;
     std::vector<ff::ff_node*> workers;
@@ -268,8 +241,6 @@ int main(int argc, char *argv[])
     {
         workers.push_back(new Worker);
     }
-
-    imageBuffer = readImage( &imageFile, imageSize*imageSize );
 
     farm.add_emitter(new Emitter());
     farm.add_workers(workers);
